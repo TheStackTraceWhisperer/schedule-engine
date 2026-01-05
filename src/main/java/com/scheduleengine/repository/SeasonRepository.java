@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface SeasonRepository extends JpaRepository<Season, Long> {
-    List<Season> findAll();
     List<Season> findByLeagueId(Long leagueId);
 }
