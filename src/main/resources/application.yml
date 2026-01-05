@@ -1,22 +1,10 @@
 micronaut:
   application:
     name: scheduleEngine
-  server:
-    port: 8080
-  views:
-    thymeleaf:
-      enabled: true
-      suffix: .html
-  router:
-    static-resources:
-      default:
-        enabled: true
-        mapping: "/public/**"
-        paths: "classpath:public"
 
 datasources:
   default:
-    url: jdbc:h2:mem:devDb;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:./data/scheduledb;AUTO_SERVER=TRUE
     driverClassName: org.h2.Driver
     username: sa
     password: ''
@@ -29,4 +17,4 @@ jpa:
       hibernate:
         hbm2ddl:
           auto: update
-        show_sql: true
+        show_sql: false

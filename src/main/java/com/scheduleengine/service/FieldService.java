@@ -3,7 +3,6 @@ package com.scheduleengine.service;
 import com.scheduleengine.domain.Field;
 import com.scheduleengine.repository.FieldRepository;
 import jakarta.inject.Singleton;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,18 +24,18 @@ public class FieldService {
         return fieldRepository.findById(id);
     }
     
-    @Transactional
+    
     public Field save(Field field) {
         return fieldRepository.save(field);
     }
     
-    @Transactional
+    
     public Field update(Long id, Field field) {
         field.setId(id);
         return fieldRepository.update(field);
     }
     
-    @Transactional
+    
     public void deleteById(Long id) {
         fieldRepository.deleteById(id);
     }

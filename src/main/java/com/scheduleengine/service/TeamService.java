@@ -3,7 +3,6 @@ package com.scheduleengine.service;
 import com.scheduleengine.domain.Team;
 import com.scheduleengine.repository.TeamRepository;
 import jakarta.inject.Singleton;
-import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,18 +28,18 @@ public class TeamService {
         return teamRepository.findByLeagueId(leagueId);
     }
     
-    @Transactional
+    
     public Team save(Team team) {
         return teamRepository.save(team);
     }
     
-    @Transactional
+    
     public Team update(Long id, Team team) {
         team.setId(id);
         return teamRepository.update(team);
     }
     
-    @Transactional
+    
     public void deleteById(Long id) {
         teamRepository.deleteById(id);
     }
