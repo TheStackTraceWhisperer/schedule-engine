@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${team.id == null ? 'New Team' : 'Edit Team'} + ' - Schedule Engine'">Team Form</title>
+    <link rel="stylesheet" th:href="@{/public/css/style.css}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚽ Schedule Engine</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/leagues">Leagues</a></li>
+                <li><a href="/teams" class="active">Teams</a></li>
+                <li><a href="/fields">Fields</a></li>
+                <li><a href="/seasons">Seasons</a></li>
+                <li><a href="/games">Games</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h2 th:text="${team.id == null ? 'New Team' : 'Edit Team'}">Team Form</h2>
+            
+            <div class="form-container">
+                <form th:action="${action}" method="post" th:object="${team}">
+                    <div class="form-group">
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" name="name" th:field="*{name}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="coach">Coach</label>
+                        <input type="text" id="coach" name="coach" th:field="*{coach}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contactEmail">Contact Email</label>
+                        <input type="email" id="contactEmail" name="contactEmail" th:field="*{contactEmail}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contactPhone">Contact Phone</label>
+                        <input type="text" id="contactPhone" name="contactPhone" th:field="*{contactPhone}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="league">League</label>
+                        <select id="league" name="league.id" th:field="*{league}">
+                            <option value="">-- Select League --</option>
+                            <option th:each="league : ${leagues}" 
+                                    th:value="${league.id}" 
+                                    th:text="${league.name}">League</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a href="/teams" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

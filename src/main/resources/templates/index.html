@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Engine - Home</title>
+    <link rel="stylesheet" th:href="@{/public/css/style.css}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚽ Schedule Engine</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="/" class="active">Home</a></li>
+                <li><a href="/leagues">Leagues</a></li>
+                <li><a href="/teams">Teams</a></li>
+                <li><a href="/fields">Fields</a></li>
+                <li><a href="/seasons">Seasons</a></li>
+                <li><a href="/games">Games</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h2>Welcome to Schedule Engine</h2>
+            <p>A modern scheduling system for managing leagues, teams, fields, and games.</p>
+            
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>Leagues</h3>
+                    <div class="count" th:text="${leagueCount}">0</div>
+                    <a href="/leagues">Manage Leagues →</a>
+                </div>
+                
+                <div class="card">
+                    <h3>Teams</h3>
+                    <div class="count" th:text="${teamCount}">0</div>
+                    <a href="/teams">Manage Teams →</a>
+                </div>
+                
+                <div class="card">
+                    <h3>Fields</h3>
+                    <div class="count" th:text="${fieldCount}">0</div>
+                    <a href="/fields">Manage Fields →</a>
+                </div>
+                
+                <div class="card">
+                    <h3>Seasons</h3>
+                    <div class="count" th:text="${seasonCount}">0</div>
+                    <a href="/seasons">Manage Seasons →</a>
+                </div>
+                
+                <div class="card">
+                    <h3>Games</h3>
+                    <div class="count" th:text="${gameCount}">0</div>
+                    <a href="/games">Manage Games →</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

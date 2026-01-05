@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${game.id == null ? 'New Game' : 'Edit Game'} + ' - Schedule Engine'">Game Form</title>
+    <link rel="stylesheet" th:href="@{/public/css/style.css}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚽ Schedule Engine</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/leagues">Leagues</a></li>
+                <li><a href="/teams">Teams</a></li>
+                <li><a href="/fields">Fields</a></li>
+                <li><a href="/seasons">Seasons</a></li>
+                <li><a href="/games" class="active">Games</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            <h2 th:text="${game.id == null ? 'New Game' : 'Edit Game'}">Game Form</h2>
+            
+            <div class="form-container">
+                <form th:action="${action}" method="post" th:object="${game}">
+                    <div class="form-group">
+                        <label for="gameDate">Date & Time *</label>
+                        <input type="datetime-local" id="gameDate" name="gameDate" th:field="*{gameDate}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="homeTeam">Home Team *</label>
+                        <select id="homeTeam" name="homeTeam.id" th:field="*{homeTeam}" required>
+                            <option value="">-- Select Home Team --</option>
+                            <option th:each="team : ${teams}" 
+                                    th:value="${team.id}" 
+                                    th:text="${team.name}">Team</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="awayTeam">Away Team *</label>
+                        <select id="awayTeam" name="awayTeam.id" th:field="*{awayTeam}" required>
+                            <option value="">-- Select Away Team --</option>
+                            <option th:each="team : ${teams}" 
+                                    th:value="${team.id}" 
+                                    th:text="${team.name}">Team</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="field">Field</label>
+                        <select id="field" name="field.id" th:field="*{field}">
+                            <option value="">-- Select Field --</option>
+                            <option th:each="field : ${fields}" 
+                                    th:value="${field.id}" 
+                                    th:text="${field.name}">Field</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="season">Season</label>
+                        <select id="season" name="season.id" th:field="*{season}">
+                            <option value="">-- Select Season --</option>
+                            <option th:each="season : ${seasons}" 
+                                    th:value="${season.id}" 
+                                    th:text="${season.name}">Season</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="homeScore">Home Score</label>
+                        <input type="number" id="homeScore" name="homeScore" th:field="*{homeScore}" min="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="awayScore">Away Score</label>
+                        <input type="number" id="awayScore" name="awayScore" th:field="*{awayScore}" min="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" th:field="*{status}">
+                            <option value="SCHEDULED">Scheduled</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="POSTPONED">Postponed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" th:field="*{notes}"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a href="/games" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
