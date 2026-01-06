@@ -20,6 +20,8 @@
     <micronaut.version>4.7.5</micronaut.version>
     <javafx.version>21.0.1</javafx.version>
     <exec.mainClass>com.scheduleengine.JavaFXApplication</exec.mainClass>
+    <testfx.headless>true</testfx.headless>
+    <screenshots.dir>${project.build.directory}/screenshots</screenshots.dir>
   </properties>
 
   <repositories>
@@ -88,10 +90,47 @@
       <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
+    
+    <!-- TestFX for UI automation testing -->
+    <dependency>
+      <groupId>org.testfx</groupId>
+      <artifactId>testfx-core</artifactId>
+      <version>4.0.18</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testfx</groupId>
+      <artifactId>testfx-junit5</artifactId>
+      <version>4.0.18</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <!-- For headless testing -->
+    <dependency>
+      <groupId>org.testfx</groupId>
+      <artifactId>openjfx-monocle</artifactId>
+      <version>jdk-12.0.1+2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M9</version>
+        <configuration>
+          <argLine>
+            -Djava.awt.headless=true
+            -Dtestfx.robot=glass
+            -Dtestfx.headless=${testfx.headless}
+            -Dprism.order=sw
+            -Dprism.text=t2k
+            -Dscreenshots.dir=${screenshots.dir}
+          </argLine>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
