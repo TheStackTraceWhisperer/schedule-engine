@@ -2,12 +2,13 @@ package com.scheduleengine.service;
 
 import com.scheduleengine.domain.Game;
 import com.scheduleengine.repository.GameRepository;
-import jakarta.inject.Singleton;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
-@Singleton
+@Service
 public class GameService {
     
     private final GameRepository gameRepository;
@@ -32,19 +33,21 @@ public class GameService {
         return gameRepository.findByHomeTeamIdOrAwayTeamId(teamId, teamId);
     }
     
-    
     public Game save(Game game) {
         return gameRepository.save(game);
     }
     
-    
     public Game update(Long id, Game game) {
         game.setId(id);
-        return gameRepository.update(game);
+        return gameRepository.save(game);
     }
-    
-    
+
     public void deleteById(Long id) {
         gameRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteBySeasonId(Long seasonId) {
+        gameRepository.deleteBySeasonId(seasonId);
     }
 }

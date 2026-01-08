@@ -8,6 +8,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import javafx.scene.control.SelectionMode;
 
 public class LeagueView {
     
@@ -39,12 +40,17 @@ public class LeagueView {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
         
-        topBox.getChildren().addAll(title, spacer, refreshButton, addButton);
-        
+        Button deleteSelected = new Button("Delete Selected");
+        deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
+        deleteSelected.setOnAction(e -> deleteSelected());
+
+        topBox.getChildren().addAll(title, spacer, refreshButton, addButton, deleteSelected);
+
         // Table
         table = new TableView<>();
         table.setItems(data);
-        
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
         TableColumn<League, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(60);
@@ -97,6 +103,10 @@ public class LeagueView {
         return vbox;
     }
     
+    public void refresh() {
+        loadData();
+    }
+
     private void loadData() {
         data.clear();
         data.addAll(leagueService.findAll());
@@ -193,5 +203,32 @@ public class LeagueView {
                 loadData();
             }
         });
+    }
+
+    private void deleteSelected() {
+        var selected = table.getSelectionModel().getSelectedItems();
+        if (selected == null || selected.isEmpty()) {
+            showError("Delete Leagues", "Select one or more leagues to delete.");
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Leagues");
+        alert.setHeaderText("Delete " + selected.size() + " leagues?");
+        alert.setContentText("This will remove the selected leagues.");
+        alert.showAndWait().ifPresent(resp -> {
+            if (resp == ButtonType.OK) {
+                var toDelete = FXCollections.observableArrayList(selected);
+                toDelete.forEach(l -> leagueService.deleteById(l.getId()));
+                loadData();
+            }
+        });
+    }
+
+    private void showError(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 }

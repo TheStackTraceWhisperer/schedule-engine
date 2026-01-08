@@ -1,6 +1,7 @@
 package com.scheduleengine;
 
-import io.micronaut.context.ApplicationContext;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -19,13 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ScheduleEngineUITest extends BaseUITest {
     
-    private ApplicationContext context;
+    private ConfigurableApplicationContext context;
     private MainView mainView;
     
     @Override
     public void start(Stage stage) throws Exception {
-        // Initialize Micronaut context
-        context = ApplicationContext.run();
+        // Initialize Spring Boot context
+        context = SpringApplication.run(ScheduleEngineApplication.class);
         mainView = context.getBean(MainView.class);
         
         // Start the application

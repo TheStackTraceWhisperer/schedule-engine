@@ -27,7 +27,7 @@ public class Season {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "league_id")
     private League league;
     

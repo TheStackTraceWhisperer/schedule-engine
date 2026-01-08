@@ -16,19 +16,19 @@ public class Game {
     @Column(name = "game_date", nullable = false)
     private LocalDateTime gameDate;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "home_team_id", nullable = false)
     private Team homeTeam;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "away_team_id", nullable = false)
     private Team awayTeam;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "field_id")
     private Field field;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "season_id")
     private Season season;
     

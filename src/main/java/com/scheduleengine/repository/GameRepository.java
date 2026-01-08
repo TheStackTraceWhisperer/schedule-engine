@@ -1,8 +1,8 @@
 package com.scheduleengine.repository;
 
 import com.scheduleengine.domain.Game;
-import io.micronaut.data.annotation.Repository;
-import io.micronaut.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -10,4 +10,5 @@ import java.util.List;
 public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findBySeasonId(Long seasonId);
     List<Game> findByHomeTeamIdOrAwayTeamId(Long homeTeamId, Long awayTeamId);
+    void deleteBySeasonId(Long seasonId);
 }

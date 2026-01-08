@@ -1,14 +1,14 @@
 package com.scheduleengine;
 
 import com.scheduleengine.service.*;
-import jakarta.inject.Singleton;
+import org.springframework.stereotype.Component;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
-@Singleton
+@Component
 public class MainView {
     
     private final LeagueService leagueService;
@@ -16,138 +16,279 @@ public class MainView {
     private final FieldService fieldService;
     private final SeasonService seasonService;
     private final GameService gameService;
-    
-    private TabPane tabPane;
-    
+    private final ScheduleGeneratorService scheduleGeneratorService;
+    private final PlayerService playerService;
+
+    private LeagueView leagueView;
+    private TeamView teamView;
+    private FieldView fieldView;
+    private SeasonView seasonView;
+    private GameView gameView;
+    private RosterView rosterView;
+
     public MainView(LeagueService leagueService, TeamService teamService,
                    FieldService fieldService, SeasonService seasonService,
-                   GameService gameService) {
+                   GameService gameService, ScheduleGeneratorService scheduleGeneratorService,
+                   PlayerService playerService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
         this.seasonService = seasonService;
         this.gameService = gameService;
+        this.scheduleGeneratorService = scheduleGeneratorService;
+        this.playerService = playerService;
     }
     
+    private StackPane contentArea;
+    private String currentView = "home";
+
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Schedule Engine");
         
         // Create main layout
         BorderPane root = new BorderPane();
-        root.setPadding(new Insets(10));
-        
-        // Create menu bar
-        MenuBar menuBar = createMenuBar();
-        root.setTop(menuBar);
-        
-        // Create tab pane
-        tabPane = new TabPane();
-        
-        Tab homeTab = new Tab("Home", createHomeView());
-        homeTab.setClosable(false);
-        
-        Tab leaguesTab = new Tab("Leagues", createLeaguesView());
-        leaguesTab.setClosable(false);
-        
-        Tab teamsTab = new Tab("Teams", createTeamsView());
-        teamsTab.setClosable(false);
-        
-        Tab fieldsTab = new Tab("Fields", createFieldsView());
-        fieldsTab.setClosable(false);
-        
-        Tab seasonsTab = new Tab("Seasons", createSeasonsView());
-        seasonsTab.setClosable(false);
-        
-        Tab gamesTab = new Tab("Games", createGamesView());
-        gamesTab.setClosable(false);
-        
-        tabPane.getTabs().addAll(homeTab, leaguesTab, teamsTab, fieldsTab, seasonsTab, gamesTab);
-        
-        root.setCenter(tabPane);
-        
-        Scene scene = new Scene(root, 1000, 700);
+
+        // Create views
+        leagueView = new LeagueView(leagueService);
+        teamView = new TeamView(teamService, leagueService);
+        fieldView = new FieldView(fieldService);
+        gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
+        seasonView = new SeasonView(seasonService, leagueService, scheduleGeneratorService, gameView);
+        rosterView = new RosterView(playerService, teamService);
+
+        // Create sidebar navigation
+        VBox sidebar = createSidebar();
+        sidebar.setStyle("-fx-background-color: #2c3e50; -fx-padding: 0;");
+        sidebar.setPrefWidth(220);
+        sidebar.setMinWidth(220);
+        sidebar.setMaxWidth(220);
+
+        // Create content area
+        contentArea = new StackPane();
+        contentArea.setStyle("-fx-background-color: #ecf0f1;");
+
+        // Show home view by default
+        showView("home");
+
+        root.setLeft(sidebar);
+        root.setCenter(contentArea);
+
+        Scene scene = new Scene(root, 1200, 750);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
     
-    private MenuBar createMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        
-        Menu fileMenu = new Menu("File");
-        MenuItem exitItem = new MenuItem("Exit");
-        exitItem.setOnAction(e -> javafx.application.Platform.exit());
-        fileMenu.getItems().add(exitItem);
-        
-        Menu helpMenu = new Menu("Help");
-        MenuItem aboutItem = new MenuItem("About");
-        aboutItem.setOnAction(e -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("About");
-            alert.setHeaderText("Schedule Engine");
-            alert.setContentText("A scheduling system for managing leagues, teams, fields, and games.\nVersion 0.1");
-            alert.showAndWait();
+    private VBox createSidebar() {
+        VBox sidebar = new VBox();
+        sidebar.setSpacing(0);
+
+        // Header
+        VBox header = new VBox(10);
+        header.setStyle("-fx-background-color: #1a252f; -fx-padding: 25 20;");
+        Label appTitle = new Label("Schedule Engine");
+        appTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
+        Label appSubtitle = new Label("Sports Management");
+        appSubtitle.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6;");
+        header.getChildren().addAll(appTitle, appSubtitle);
+
+        // Navigation items
+        VBox navItems = new VBox(2);
+        navItems.setStyle("-fx-padding: 10 0;");
+
+        navItems.getChildren().addAll(
+            createNavButton("🏠", "Home", "home"),
+            createSeparator(),
+            createNavButton("🏆", "Leagues", "leagues"),
+            createNavButton("👥", "Teams", "teams"),
+            createNavButton("👤", "Rosters", "rosters"),
+            createNavButton("📍", "Fields", "fields"),
+            createNavButton("📅", "Seasons", "seasons"),
+            createNavButton("⚽", "Games", "games")
+        );
+
+        // Spacer
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        // Footer with menu
+        VBox footer = new VBox(2);
+        footer.setStyle("-fx-padding: 10 0;");
+        footer.getChildren().addAll(
+            createSeparator(),
+            createNavButton("ℹ️", "About", "about"),
+            createNavButton("🚪", "Exit", "exit")
+        );
+
+        sidebar.getChildren().addAll(header, navItems, spacer, footer);
+        return sidebar;
+    }
+
+    private Button createNavButton(String icon, String text, String viewId) {
+        Button btn = new Button();
+
+        HBox content = new HBox(12);
+        content.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle("-fx-font-size: 18px;");
+
+        Label textLabel = new Label(text);
+        textLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ecf0f1;");
+
+        content.getChildren().addAll(iconLabel, textLabel);
+        btn.setGraphic(content);
+
+        btn.setMaxWidth(Double.MAX_VALUE);
+        btn.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        btn.setStyle("-fx-background-color: transparent; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+
+        btn.setOnMouseEntered(e -> {
+            if (!currentView.equals(viewId)) {
+                btn.setStyle("-fx-background-color: #34495e; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+            }
         });
-        helpMenu.getItems().add(aboutItem);
-        
-        menuBar.getMenus().addAll(fileMenu, helpMenu);
-        return menuBar;
+
+        btn.setOnMouseExited(e -> {
+            if (!currentView.equals(viewId)) {
+                btn.setStyle("-fx-background-color: transparent; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+            }
+        });
+
+        btn.setOnAction(e -> {
+            showView(viewId);
+            updateNavButtonStyles(btn, viewId);
+        });
+
+        // Set initial active state
+        if (viewId.equals(currentView)) {
+            btn.setStyle("-fx-background-color: #667eea; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+        }
+
+        return btn;
+    }
+
+    private Region createSeparator() {
+        Region sep = new Region();
+        sep.setPrefHeight(1);
+        sep.setMaxHeight(1);
+        sep.setStyle("-fx-background-color: #34495e; -fx-padding: 0 10;");
+        VBox container = new VBox(sep);
+        container.setStyle("-fx-padding: 8 20;");
+        return container;
+    }
+
+    private void updateNavButtonStyles(Button activeBtn, String viewId) {
+        currentView = viewId;
+        VBox sidebar = (VBox) activeBtn.getParent().getParent();
+        updateButtonStyles(sidebar, viewId);
+    }
+
+    private void updateButtonStyles(javafx.scene.Parent parent, String activeViewId) {
+        for (javafx.scene.Node node : parent.getChildrenUnmodifiable()) {
+            if (node instanceof Button) {
+                Button btn = (Button) node;
+                // Reset all buttons
+                btn.setStyle("-fx-background-color: transparent; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+            } else if (node instanceof javafx.scene.Parent) {
+                updateButtonStyles((javafx.scene.Parent) node, activeViewId);
+            }
+        }
+    }
+
+    private void showView(String viewId) {
+        contentArea.getChildren().clear();
+
+        switch (viewId) {
+            case "home":
+                contentArea.getChildren().add(createHomeView());
+                break;
+            case "leagues":
+                leagueView.refresh();
+                contentArea.getChildren().add(leagueView.getView());
+                break;
+            case "teams":
+                teamView.refresh();
+                contentArea.getChildren().add(teamView.getView());
+                break;
+            case "rosters":
+                rosterView.refresh();
+                contentArea.getChildren().add(rosterView.getView());
+                break;
+            case "fields":
+                fieldView.refresh();
+                contentArea.getChildren().add(fieldView.getView());
+                break;
+            case "seasons":
+                seasonView.refresh();
+                contentArea.getChildren().add(seasonView.getView());
+                break;
+            case "games":
+                gameView.refresh();
+                contentArea.getChildren().add(gameView.getView());
+                break;
+            case "about":
+                showAboutDialog();
+                break;
+            case "exit":
+                javafx.application.Platform.exit();
+                break;
+        }
+    }
+
+    private void showAboutDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About");
+        alert.setHeaderText("Schedule Engine");
+        alert.setContentText("A modern scheduling system for managing leagues, teams, fields, and games.\n\nVersion 0.1\nBuilt with Spring Boot & JavaFX");
+        alert.showAndWait();
     }
     
     private VBox createHomeView() {
-        VBox vbox = new VBox(20);
-        vbox.setPadding(new Insets(20));
-        
+        VBox vbox = new VBox(30);
+        vbox.setPadding(new Insets(40));
+        vbox.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+        VBox.setMargin(vbox, new Insets(20));
+
         Label titleLabel = new Label("Welcome to Schedule Engine");
-        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
-        
+        titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
         Label descLabel = new Label("A modern scheduling system for managing leagues, teams, fields, and games.");
+        descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
         descLabel.setWrapText(true);
         
-        // Stats grid
+        // Stats cards in a grid
         GridPane statsGrid = new GridPane();
         statsGrid.setHgap(20);
-        statsGrid.setVgap(15);
-        statsGrid.setPadding(new Insets(20));
-        statsGrid.setStyle("-fx-background-color: #f4f7f9; -fx-border-color: #ddd; -fx-border-radius: 5; -fx-background-radius: 5;");
-        
-        int row = 0;
-        addStatRow(statsGrid, row++, "Leagues:", String.valueOf(leagueService.findAll().size()));
-        addStatRow(statsGrid, row++, "Teams:", String.valueOf(teamService.findAll().size()));
-        addStatRow(statsGrid, row++, "Fields:", String.valueOf(fieldService.findAll().size()));
-        addStatRow(statsGrid, row++, "Seasons:", String.valueOf(seasonService.findAll().size()));
-        addStatRow(statsGrid, row++, "Games:", String.valueOf(gameService.findAll().size()));
-        
-        vbox.getChildren().addAll(titleLabel, descLabel, new Label(), statsGrid);
+        statsGrid.setVgap(20);
+        statsGrid.setPadding(new Insets(20, 0, 0, 0));
+
+        statsGrid.add(createStatCard("🏆", "Leagues", String.valueOf(leagueService.findAll().size()), "#667eea"), 0, 0);
+        statsGrid.add(createStatCard("👥", "Teams", String.valueOf(teamService.findAll().size()), "#764ba2"), 1, 0);
+        statsGrid.add(createStatCard("📍", "Fields", String.valueOf(fieldService.findAll().size()), "#f093fb"), 0, 1);
+        statsGrid.add(createStatCard("📅", "Seasons", String.valueOf(seasonService.findAll().size()), "#4facfe"), 1, 1);
+        statsGrid.add(createStatCard("⚽", "Games", String.valueOf(gameService.findAll().size()), "#43e97b"), 0, 2, 2, 1);
+
+        vbox.getChildren().addAll(titleLabel, descLabel, statsGrid);
         return vbox;
     }
     
-    private void addStatRow(GridPane grid, int row, String label, String value) {
+    private VBox createStatCard(String icon, String label, String value, String color) {
+        VBox card = new VBox(10);
+        card.setPadding(new Insets(25));
+        card.setStyle("-fx-background-color: white; -fx-border-color: " + color + "; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
+        card.setPrefWidth(250);
+        card.setPrefHeight(120);
+
+        Label iconLabel = new Label(icon);
+        iconLabel.setStyle("-fx-font-size: 32px;");
+
         Label nameLabel = new Label(label);
-        nameLabel.setStyle("-fx-font-weight: bold;");
+        nameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d; -fx-font-weight: bold;");
+
         Label valueLabel = new Label(value);
-        valueLabel.setStyle("-fx-font-size: 20px; -fx-text-fill: #667eea;");
-        
-        grid.add(nameLabel, 0, row);
-        grid.add(valueLabel, 1, row);
-    }
-    
-    private VBox createLeaguesView() {
-        return new LeagueView(leagueService).getView();
-    }
-    
-    private VBox createTeamsView() {
-        return new TeamView(teamService, leagueService).getView();
-    }
-    
-    private VBox createFieldsView() {
-        return new FieldView(fieldService).getView();
-    }
-    
-    private VBox createSeasonsView() {
-        return new SeasonView(seasonService, leagueService).getView();
-    }
-    
-    private VBox createGamesView() {
-        return new GameView(gameService, teamService, fieldService, seasonService).getView();
+        valueLabel.setStyle("-fx-font-size: 36px; -fx-text-fill: " + color + "; -fx-font-weight: bold;");
+
+        card.getChildren().addAll(iconLabel, nameLabel, valueLabel);
+        return card;
     }
 }

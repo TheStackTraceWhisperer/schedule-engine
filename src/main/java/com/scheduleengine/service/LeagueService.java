@@ -2,12 +2,12 @@ package com.scheduleengine.service;
 
 import com.scheduleengine.domain.League;
 import com.scheduleengine.repository.LeagueRepository;
-import jakarta.inject.Singleton;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-@Singleton
+@Service
 public class LeagueService {
     
     private final LeagueRepository leagueRepository;
@@ -24,18 +24,15 @@ public class LeagueService {
         return leagueRepository.findById(id);
     }
     
-    
     public League save(League league) {
         return leagueRepository.save(league);
     }
     
-    
     public League update(Long id, League league) {
         league.setId(id);
-        return leagueRepository.update(league);
+        return leagueRepository.save(league);
     }
-    
-    
+
     public void deleteById(Long id) {
         leagueRepository.deleteById(id);
     }

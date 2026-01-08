@@ -25,7 +25,7 @@ public class Team {
     @Column(name = "contact_phone")
     private String contactPhone;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "league_id")
     private League league;
     

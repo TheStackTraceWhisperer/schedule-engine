@@ -1,8 +1,8 @@
 package com.scheduleengine.repository;
 
 import com.scheduleengine.domain.League;
-import io.micronaut.data.annotation.Repository;
-import io.micronaut.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
