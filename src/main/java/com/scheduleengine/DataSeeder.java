@@ -1,15 +1,17 @@
 package com.scheduleengine;
 
-import com.scheduleengine.domain.Field;
-import com.scheduleengine.domain.League;
-import com.scheduleengine.domain.Season;
-import com.scheduleengine.domain.Team;
-import com.scheduleengine.domain.Player;
-import com.scheduleengine.service.FieldService;
-import com.scheduleengine.service.LeagueService;
-import com.scheduleengine.service.SeasonService;
-import com.scheduleengine.service.TeamService;
-import com.scheduleengine.service.PlayerService;
+import com.scheduleengine.field.domain.Field;
+import com.scheduleengine.league.domain.League;
+import com.scheduleengine.season.domain.Season;
+import com.scheduleengine.team.domain.Team;
+import com.scheduleengine.player.domain.Player;
+import com.scheduleengine.tournament.domain.Tournament;
+import com.scheduleengine.field.service.FieldService;
+import com.scheduleengine.league.service.LeagueService;
+import com.scheduleengine.season.service.SeasonService;
+import com.scheduleengine.team.service.TeamService;
+import com.scheduleengine.player.service.PlayerService;
+import com.scheduleengine.tournament.service.TournamentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -27,14 +29,17 @@ public class DataSeeder implements CommandLineRunner {
     private final FieldService fieldService;
     private final SeasonService seasonService;
     private final PlayerService playerService;
+    private final TournamentService tournamentService;
 
     public DataSeeder(LeagueService leagueService, TeamService teamService,
-                     FieldService fieldService, SeasonService seasonService, PlayerService playerService) {
+                     FieldService fieldService, SeasonService seasonService, PlayerService playerService,
+                     TournamentService tournamentService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
         this.seasonService = seasonService;
         this.playerService = playerService;
+        this.tournamentService = tournamentService;
     }
 
     @Override
@@ -116,13 +121,31 @@ public class DataSeeder implements CommandLineRunner {
         createBasketballRoster(riversideRaptors);
         createBasketballRoster(lakesideLakers);
 
+        // Create Tournaments
+        createTournament("Premier Cup 2026", "Annual championship for premier league teams",
+                Tournament.TournamentType.LEAGUE_SCOPED, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
+                soccerLeague, 8, LocalDate.of(2026, 6, 20), 50.0, "Memorial Stadium");
+
+        createTournament("Open Spring Classic", "Open tournament - all teams welcome",
+                Tournament.TournamentType.OPEN, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 10),
+                null, 16, LocalDate.of(2026, 3, 25), 25.0, "Central Arena");
+
+        createTournament("Elite Invitational", "Invitation only showcase tournament",
+                Tournament.TournamentType.INVITATIONAL, LocalDate.of(2026, 8, 15), LocalDate.of(2026, 8, 22),
+                null, 8, LocalDate.of(2026, 8, 1), 100.0, "North Sports Complex");
+
+        createTournament("Youth Summer Showcase", "Youth development tournament",
+                Tournament.TournamentType.LEAGUE_SCOPED, LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 17),
+                youthLeague, 8, LocalDate.of(2026, 7, 1), 20.0, "Riverside Park Field");
+
         log.info("Database seeding completed successfully!");
-        log.info("Created {} leagues, {} teams, {} players, {} fields, {} seasons",
+        log.info("Created {} leagues, {} teams, {} players, {} fields, {} seasons, {} tournaments",
                 leagueService.findAll().size(),
                 teamService.findAll().size(),
                 playerService.findAll().size(),
                 fieldService.findAll().size(),
-                seasonService.findAll().size());
+                seasonService.findAll().size(),
+                tournamentService.findAll().size());
     }
 
     private Team createTeam(String name, String coach, String email, League league) {
@@ -181,6 +204,24 @@ public class DataSeeder implements CommandLineRunner {
         player.setPosition(position);
         player.setTeam(team);
         playerService.save(player);
+    }
+
+    private void createTournament(String name, String description, Tournament.TournamentType type,
+                                 LocalDate startDate, LocalDate endDate, League league, Integer maxTeams,
+                                 LocalDate registrationDeadline, Double entryFee, String location) {
+        Tournament tournament = new Tournament();
+        tournament.setName(name);
+        tournament.setDescription(description);
+        tournament.setType(type);
+        tournament.setStartDate(startDate);
+        tournament.setEndDate(endDate);
+        tournament.setLeague(league);
+        tournament.setMaxTeams(maxTeams);
+        tournament.setRegistrationDeadline(registrationDeadline);
+        tournament.setEntryFee(entryFee);
+        tournament.setLocation(location);
+        tournament.setStatus(Tournament.TournamentStatus.REGISTRATION);
+        tournamentService.save(tournament);
     }
 
     private void createField(String name, String location, String address) {

@@ -1,12 +1,29 @@
 package com.scheduleengine;
 
-import com.scheduleengine.service.*;
+import com.scheduleengine.league.service.LeagueService;
+import com.scheduleengine.league.LeagueView;
+import com.scheduleengine.team.service.TeamService;
+import com.scheduleengine.team.TeamView;
+import com.scheduleengine.field.service.FieldService;
+import com.scheduleengine.field.FieldView;
+import com.scheduleengine.season.service.SeasonService;
+import com.scheduleengine.season.SeasonView;
+import com.scheduleengine.game.service.GameService;
+import com.scheduleengine.game.GameView;
+import com.scheduleengine.player.service.PlayerService;
+import com.scheduleengine.player.RosterView;
+import com.scheduleengine.tournament.service.TournamentService;
+import com.scheduleengine.tournament.service.TournamentRegistrationService;
+import com.scheduleengine.tournament.TournamentView;
+import com.scheduleengine.common.service.ScheduleGeneratorService;
 import org.springframework.stereotype.Component;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 
 @Component
 public class MainView {
@@ -18,6 +35,8 @@ public class MainView {
     private final GameService gameService;
     private final ScheduleGeneratorService scheduleGeneratorService;
     private final PlayerService playerService;
+    private final TournamentService tournamentService;
+    private final TournamentRegistrationService tournamentRegistrationService;
 
     private LeagueView leagueView;
     private TeamView teamView;
@@ -25,11 +44,13 @@ public class MainView {
     private SeasonView seasonView;
     private GameView gameView;
     private RosterView rosterView;
+    private TournamentView tournamentView;
 
     public MainView(LeagueService leagueService, TeamService teamService,
                    FieldService fieldService, SeasonService seasonService,
                    GameService gameService, ScheduleGeneratorService scheduleGeneratorService,
-                   PlayerService playerService) {
+                   PlayerService playerService, TournamentService tournamentService,
+                   TournamentRegistrationService tournamentRegistrationService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
@@ -37,10 +58,13 @@ public class MainView {
         this.gameService = gameService;
         this.scheduleGeneratorService = scheduleGeneratorService;
         this.playerService = playerService;
+        this.tournamentService = tournamentService;
+        this.tournamentRegistrationService = tournamentRegistrationService;
     }
     
     private StackPane contentArea;
-    private String currentView = "home";
+    private String currentView = "leagues";
+    private final java.util.Map<String, Button> navButtons = new java.util.HashMap<>();
 
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Schedule Engine");
@@ -55,22 +79,38 @@ public class MainView {
         gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
         seasonView = new SeasonView(seasonService, leagueService, scheduleGeneratorService, gameView);
         rosterView = new RosterView(playerService, teamService);
+        tournamentView = new TournamentView(tournamentService, tournamentRegistrationService, leagueService, teamService);
 
         // Create sidebar navigation
         VBox sidebar = createSidebar();
         sidebar.setStyle("-fx-background-color: #2c3e50; -fx-padding: 0;");
-        sidebar.setPrefWidth(220);
-        sidebar.setMinWidth(220);
-        sidebar.setMaxWidth(220);
+
+        // Wrap sidebar in ScrollPane for scrolling
+        ScrollPane sidebarScroll = new ScrollPane(sidebar);
+        sidebarScroll.setStyle("-fx-background-color: #2c3e50; -fx-background: #2c3e50;");
+        sidebarScroll.setFitToWidth(true);
+        sidebarScroll.setPrefWidth(220);
+        sidebarScroll.setMinWidth(220);
+        sidebarScroll.setMaxWidth(220);
+        sidebarScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sidebarScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // Hide scrollbar but keep scroll behavior
+
+        // CSS to hide scrollbar completely
+        sidebarScroll.setStyle(
+            "-fx-background-color: #2c3e50;" +
+            "-fx-background: #2c3e50;" +
+            "-fx-focus-color: transparent;" +
+            "-fx-faint-focus-color: transparent;"
+        );
 
         // Create content area
         contentArea = new StackPane();
         contentArea.setStyle("-fx-background-color: #ecf0f1;");
 
-        // Show home view by default
-        showView("home");
+        // Show leagues view by default
+        showView("leagues");
 
-        root.setLeft(sidebar);
+        root.setLeft(sidebarScroll);
         root.setCenter(contentArea);
 
         Scene scene = new Scene(root, 1200, 750);
@@ -96,14 +136,23 @@ public class MainView {
         navItems.setStyle("-fx-padding: 10 0;");
 
         navItems.getChildren().addAll(
-            createNavButton("🏠", "Home", "home"),
+            createSectionHeader("DATA MANAGEMENT", FontAwesomeIcon.DATABASE),
+            createNavButton(FontAwesomeIcon.TROPHY, "Leagues", "leagues"),
+            createNavButton(FontAwesomeIcon.USERS, "Teams", "teams"),
+            createNavButton(FontAwesomeIcon.USER, "Rosters", "rosters"),
+            createNavButton(FontAwesomeIcon.MAP_MARKER, "Fields", "fields"),
+            createNavButton(FontAwesomeIcon.CALENDAR, "Seasons", "seasons"),
+            createNavButton(FontAwesomeIcon.CERTIFICATE, "Tournaments", "tournaments"),
+            createNavButton(FontAwesomeIcon.FUTBOL_ALT, "Games", "games"),
             createSeparator(),
-            createNavButton("🏆", "Leagues", "leagues"),
-            createNavButton("👥", "Teams", "teams"),
-            createNavButton("👤", "Rosters", "rosters"),
-            createNavButton("📍", "Fields", "fields"),
-            createNavButton("📅", "Seasons", "seasons"),
-            createNavButton("⚽", "Games", "games")
+            createSectionHeader("REGISTRATION", FontAwesomeIcon.EDIT),
+            createNavButton(FontAwesomeIcon.CLIPBOARD, "Team Registration", "registration"),
+            createSeparator(),
+            createSectionHeader("PAYMENTS", FontAwesomeIcon.MONEY),
+            createNavButton(FontAwesomeIcon.CREDIT_CARD, "Payment Management", "payments"),
+            createSeparator(),
+            createSectionHeader("OPERATIONS", FontAwesomeIcon.COG),
+            createNavButton(FontAwesomeIcon.BAR_CHART, "Game Operations", "operations")
         );
 
         // Spacer
@@ -115,27 +164,27 @@ public class MainView {
         footer.setStyle("-fx-padding: 10 0;");
         footer.getChildren().addAll(
             createSeparator(),
-            createNavButton("ℹ️", "About", "about"),
-            createNavButton("🚪", "Exit", "exit")
+            createNavButton(FontAwesomeIcon.SIGN_OUT, "Exit", "exit")
         );
 
         sidebar.getChildren().addAll(header, navItems, spacer, footer);
         return sidebar;
     }
 
-    private Button createNavButton(String icon, String text, String viewId) {
+    private Button createNavButton(FontAwesomeIcon icon, String text, String viewId) {
         Button btn = new Button();
 
         HBox content = new HBox(12);
         content.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
-        Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 18px;");
+        FontAwesomeIconView iconView = new FontAwesomeIconView(icon);
+        iconView.setSize("16");
+        iconView.setFill(javafx.scene.paint.Color.web("#ecf0f1"));
 
         Label textLabel = new Label(text);
         textLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #ecf0f1;");
 
-        content.getChildren().addAll(iconLabel, textLabel);
+        content.getChildren().addAll(iconView, textLabel);
         btn.setGraphic(content);
 
         btn.setMaxWidth(Double.MAX_VALUE);
@@ -156,13 +205,16 @@ public class MainView {
 
         btn.setOnAction(e -> {
             showView(viewId);
-            updateNavButtonStyles(btn, viewId);
+            updateNavButtonStyles(viewId);
         });
 
         // Set initial active state
         if (viewId.equals(currentView)) {
             btn.setStyle("-fx-background-color: #667eea; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
         }
+
+        // Store button reference for later highlighting
+        navButtons.put(viewId, btn);
 
         return btn;
     }
@@ -177,31 +229,45 @@ public class MainView {
         return container;
     }
 
-    private void updateNavButtonStyles(Button activeBtn, String viewId) {
+    private HBox createSectionHeader(String text, FontAwesomeIcon icon) {
+        HBox header = new HBox(8);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        header.setStyle("-fx-padding: 10 20 5 20;");
+
+        FontAwesomeIconView iconView = new FontAwesomeIconView(icon);
+        iconView.setSize("12");
+        iconView.setFill(javafx.scene.paint.Color.web("#95a5a6"));
+
+        Label label = new Label(text);
+        label.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #95a5a6;");
+
+        header.getChildren().addAll(iconView, label);
+        return header;
+    }
+
+    private void updateNavButtonStyles(String viewId) {
         currentView = viewId;
-        VBox sidebar = (VBox) activeBtn.getParent().getParent();
-        updateButtonStyles(sidebar, viewId);
+
+        // Reset all buttons to transparent
+        for (Button btn : navButtons.values()) {
+            btn.setStyle("-fx-background-color: transparent; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+        }
+
+        // Highlight the active button
+        Button activeBtn = navButtons.get(viewId);
+        if (activeBtn != null) {
+            activeBtn.setStyle("-fx-background-color: #667eea; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
+        }
     }
 
     private void updateButtonStyles(javafx.scene.Parent parent, String activeViewId) {
-        for (javafx.scene.Node node : parent.getChildrenUnmodifiable()) {
-            if (node instanceof Button) {
-                Button btn = (Button) node;
-                // Reset all buttons
-                btn.setStyle("-fx-background-color: transparent; -fx-padding: 12 20; -fx-cursor: hand; -fx-background-radius: 0;");
-            } else if (node instanceof javafx.scene.Parent) {
-                updateButtonStyles((javafx.scene.Parent) node, activeViewId);
-            }
-        }
+        // This method is no longer needed but keeping for compatibility
     }
 
     private void showView(String viewId) {
         contentArea.getChildren().clear();
 
         switch (viewId) {
-            case "home":
-                contentArea.getChildren().add(createHomeView());
-                break;
             case "leagues":
                 leagueView.refresh();
                 contentArea.getChildren().add(leagueView.getView());
@@ -222,12 +288,22 @@ public class MainView {
                 seasonView.refresh();
                 contentArea.getChildren().add(seasonView.getView());
                 break;
+            case "tournaments":
+                tournamentView.refresh();
+                contentArea.getChildren().add(tournamentView.getView());
+                break;
             case "games":
                 gameView.refresh();
                 contentArea.getChildren().add(gameView.getView());
                 break;
-            case "about":
-                showAboutDialog();
+            case "registration":
+                contentArea.getChildren().add(createRegistrationView());
+                break;
+            case "payments":
+                contentArea.getChildren().add(createPaymentsView());
+                break;
+            case "operations":
+                contentArea.getChildren().add(createOperationsView());
                 break;
             case "exit":
                 javafx.application.Platform.exit();
@@ -235,60 +311,88 @@ public class MainView {
         }
     }
 
-    private void showAboutDialog() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("About");
-        alert.setHeaderText("Schedule Engine");
-        alert.setContentText("A modern scheduling system for managing leagues, teams, fields, and games.\n\nVersion 0.1\nBuilt with Spring Boot & JavaFX");
-        alert.showAndWait();
-    }
-    
-    private VBox createHomeView() {
+    private VBox createRegistrationView() {
         VBox vbox = new VBox(30);
         vbox.setPadding(new Insets(40));
         vbox.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
         VBox.setMargin(vbox, new Insets(20));
 
-        Label titleLabel = new Label("Welcome to Schedule Engine");
+        Label titleLabel = new Label("📝 Team Registration");
         titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        Label descLabel = new Label("A modern scheduling system for managing leagues, teams, fields, and games.");
+        Label descLabel = new Label("Streamlined team and roster management interface");
         descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
         descLabel.setWrapText(true);
-        
-        // Stats cards in a grid
-        GridPane statsGrid = new GridPane();
-        statsGrid.setHgap(20);
-        statsGrid.setVgap(20);
-        statsGrid.setPadding(new Insets(20, 0, 0, 0));
 
-        statsGrid.add(createStatCard("🏆", "Leagues", String.valueOf(leagueService.findAll().size()), "#667eea"), 0, 0);
-        statsGrid.add(createStatCard("👥", "Teams", String.valueOf(teamService.findAll().size()), "#764ba2"), 1, 0);
-        statsGrid.add(createStatCard("📍", "Fields", String.valueOf(fieldService.findAll().size()), "#f093fb"), 0, 1);
-        statsGrid.add(createStatCard("📅", "Seasons", String.valueOf(seasonService.findAll().size()), "#4facfe"), 1, 1);
-        statsGrid.add(createStatCard("⚽", "Games", String.valueOf(gameService.findAll().size()), "#43e97b"), 0, 2, 2, 1);
+        Label comingSoonLabel = new Label("Coming Soon");
+        comingSoonLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: #95a5a6; -fx-padding: 40 0 0 0;");
 
-        vbox.getChildren().addAll(titleLabel, descLabel, statsGrid);
+        Label detailsLabel = new Label("This view will provide:\n\n" +
+                "• Quick team registration and management\n" +
+                "• Roster creation and player assignments\n" +
+                "• Team status tracking\n" +
+                "• Bulk operations for multiple teams");
+        detailsLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        detailsLabel.setWrapText(true);
+
+        vbox.getChildren().addAll(titleLabel, descLabel, comingSoonLabel, detailsLabel);
         return vbox;
     }
-    
-    private VBox createStatCard(String icon, String label, String value, String color) {
-        VBox card = new VBox(10);
-        card.setPadding(new Insets(25));
-        card.setStyle("-fx-background-color: white; -fx-border-color: " + color + "; -fx-border-width: 2; -fx-border-radius: 10; -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
-        card.setPrefWidth(250);
-        card.setPrefHeight(120);
 
-        Label iconLabel = new Label(icon);
-        iconLabel.setStyle("-fx-font-size: 32px;");
+    private VBox createPaymentsView() {
+        VBox vbox = new VBox(30);
+        vbox.setPadding(new Insets(40));
+        vbox.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+        VBox.setMargin(vbox, new Insets(20));
 
-        Label nameLabel = new Label(label);
-        nameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d; -fx-font-weight: bold;");
+        Label titleLabel = new Label("💰 Payment Management");
+        titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
-        Label valueLabel = new Label(value);
-        valueLabel.setStyle("-fx-font-size: 36px; -fx-text-fill: " + color + "; -fx-font-weight: bold;");
+        Label descLabel = new Label("Track and manage all financial transactions");
+        descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
+        descLabel.setWrapText(true);
 
-        card.getChildren().addAll(iconLabel, nameLabel, valueLabel);
-        return card;
+        Label comingSoonLabel = new Label("Coming Soon");
+        comingSoonLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: #95a5a6; -fx-padding: 40 0 0 0;");
+
+        Label detailsLabel = new Label("This view will provide:\n\n" +
+                "• Team registration fee tracking\n" +
+                "• Tournament entry fee management\n" +
+                "• Payment status and history\n" +
+                "• Financial reporting and analytics");
+        detailsLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        detailsLabel.setWrapText(true);
+
+        vbox.getChildren().addAll(titleLabel, descLabel, comingSoonLabel, detailsLabel);
+        return vbox;
+    }
+
+    private VBox createOperationsView() {
+        VBox vbox = new VBox(30);
+        vbox.setPadding(new Insets(40));
+        vbox.setStyle("-fx-background-color: white; -fx-background-radius: 10;");
+        VBox.setMargin(vbox, new Insets(20));
+
+        Label titleLabel = new Label("⚙️ Game Operations");
+        titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+
+        Label descLabel = new Label("Real-time game tracking and statistics management");
+        descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
+        descLabel.setWrapText(true);
+
+        Label comingSoonLabel = new Label("Coming Soon");
+        comingSoonLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: #95a5a6; -fx-padding: 40 0 0 0;");
+
+        Label detailsLabel = new Label("This view will provide:\n\n" +
+                "• Live game score updates\n" +
+                "• Quick status changes (Scheduled → In Progress → Completed)\n" +
+                "• Multi-game dashboard view\n" +
+                "• Player statistics tracking\n" +
+                "• Game event logging");
+        detailsLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
+        detailsLabel.setWrapText(true);
+
+        vbox.getChildren().addAll(titleLabel, descLabel, comingSoonLabel, detailsLabel);
+        return vbox;
     }
 }
