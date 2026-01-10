@@ -10,12 +10,25 @@ public class JavaFXApplication extends Application {
 
     private ConfigurableApplicationContext context;
     private MainView mainView;
+    private boolean shouldCloseContext = true;
+
+    /**
+     * For testing: inject an existing context instead of creating a new one
+     */
+    public void setContext(ConfigurableApplicationContext injectedContext) {
+        this.context = injectedContext;
+        this.shouldCloseContext = false; // Don't close a context we didn't create
+        this.mainView = context.getBean(MainView.class);
+    }
 
     @Override
     public void init() {
-        // Initialize Spring Boot context
-        context = SpringApplication.run(ScheduleEngineApplication.class);
-        mainView = context.getBean(MainView.class);
+        // Only create context if one wasn't injected (normal app startup)
+        if (context == null) {
+            context = SpringApplication.run(ScheduleEngineApplication.class);
+            mainView = context.getBean(MainView.class);
+            shouldCloseContext = true;
+        }
     }
 
     @Override
@@ -30,7 +43,8 @@ public class JavaFXApplication extends Application {
 
     @Override
     public void stop() {
-        if (context != null) {
+        // Only close context if we created it
+        if (context != null && shouldCloseContext) {
             context.close();
         }
     }
@@ -39,4 +53,6 @@ public class JavaFXApplication extends Application {
         launch(args);
     }
 }
+
+
 

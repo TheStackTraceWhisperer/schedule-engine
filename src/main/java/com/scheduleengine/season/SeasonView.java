@@ -6,6 +6,9 @@ import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.season.service.SeasonService;
 import com.scheduleengine.game.GameView;
 import com.scheduleengine.common.service.ScheduleGeneratorService;
+import com.scheduleengine.common.ScheduleGeneratorResultView;
+import com.scheduleengine.game.service.GameService;
+import com.scheduleengine.game.service.GameService;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,14 +27,18 @@ public class SeasonView {
     private TableView<Season> table;
     private ObservableList<Season> data;
     private ScheduleGeneratorService scheduleService;
-    private final GameView gameView; // to refresh after generation
+    private final GameView gameView;
+    private final GameService gameService;
+    private ScheduleGeneratorResultView scheduleGeneratorResultView;
 
-    public SeasonView(SeasonService seasonService, LeagueService leagueService, ScheduleGeneratorService scheduleService, GameView gameView) {
+    public SeasonView(SeasonService seasonService, LeagueService leagueService, ScheduleGeneratorService scheduleService, GameView gameView, GameService gameService) {
         this.seasonService = seasonService;
         this.leagueService = leagueService;
         this.scheduleService = scheduleService;
         this.gameView = gameView;
+        this.gameService = gameService;
         this.data = FXCollections.observableArrayList();
+        this.scheduleGeneratorResultView = new ScheduleGeneratorResultView(scheduleService, gameService);
     }
     
     public VBox getView() {
@@ -52,17 +59,15 @@ public class SeasonView {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
         
-        CheckBox overwriteBox = new CheckBox("Overwrite existing games");
-        overwriteBox.setSelected(true);
-
-        Button genButton = new Button("Generate & Save Schedule");
-        genButton.setOnAction(e -> onGenerateSchedule(overwriteBox.isSelected()));
+        Button genButton = new Button("Generate Schedule");
+        genButton.setStyle("-fx-background-color: #43e97b; -fx-text-fill: white;");
+        genButton.setOnAction(e -> openScheduleGenerator());
 
         Button deleteSelected = new Button("Delete Selected");
         deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
         deleteSelected.setOnAction(e -> deleteSelected());
 
-        topBox.getChildren().addAll(title, spacer, overwriteBox, genButton, refreshButton, addButton, deleteSelected);
+        topBox.getChildren().addAll(title, spacer, genButton, refreshButton, addButton, deleteSelected);
 
         table = new TableView<>();
         table.setItems(data);
@@ -272,45 +277,30 @@ public class SeasonView {
         a.showAndWait();
     }
 
-    private void onGenerateSchedule(boolean overwrite) {
+    private void openScheduleGenerator() {
         Season selected = table.getSelectionModel().getSelectedItem();
         if (selected == null) {
             showError("Generate Schedule", "Please select a season first");
             return;
         }
-        if (selected.getLeague() == null) {
-            showError("Generate Schedule", "Selected season has no league");
-            return;
-        }
-        var rounds = scheduleService.generateRoundRobin(selected.getLeague(), selected);
-        if (rounds.isEmpty()) {
-            Alert a = new Alert(Alert.AlertType.INFORMATION);
-            a.setTitle("Schedule");
-            a.setHeaderText("No matches to schedule");
-            a.setContentText("There are not enough teams to generate a schedule.");
-            a.showAndWait();
-            return;
-        }
-        var games = scheduleService.generateAndPersist(selected.getLeague(), selected, overwrite);
-        StringBuilder sb = new StringBuilder();
-        sb.append("Created ").append(games.size()).append(" games.\n\n");
-        rounds.forEach(r -> {
-            sb.append("Round ").append(r.getRoundNumber()).append(":\n");
-            r.getMatches().forEach(m -> sb.append("  ")
-                .append(m.getHome().getName()).append(" vs ")
-                .append(m.getAway().getName()).append("\n"));
-            sb.append("\n");
-        });
-        TextArea ta = new TextArea(sb.toString());
-        ta.setEditable(false);
-        ta.setWrapText(true);
-        ta.setPrefRowCount(20);
-        Dialog<Void> dlg = new Dialog<>();
-        dlg.setTitle("Generated & Saved Schedule");
-        dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dlg.getDialogPane().setContent(ta);
-        dlg.showAndWait();
+
+        // Create a dialog with the schedule generator view
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Schedule Generator - " + selected.getName());
+        dialog.setWidth(1000);
+        dialog.setHeight(700);
+
+        VBox generatorView = scheduleGeneratorResultView.getView(selected);
+        dialog.getDialogPane().setContent(generatorView);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        dialog.showAndWait();
         gameView.refresh();
+        loadData();
+    }
+
+    private void onGenerateSchedule(boolean overwrite) {
+        // Legacy method - kept for backward compatibility
     }
 
     private void deleteSelected() {

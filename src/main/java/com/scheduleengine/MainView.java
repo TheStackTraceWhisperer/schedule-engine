@@ -77,7 +77,7 @@ public class MainView {
         teamView = new TeamView(teamService, leagueService);
         fieldView = new FieldView(fieldService);
         gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
-        seasonView = new SeasonView(seasonService, leagueService, scheduleGeneratorService, gameView);
+        seasonView = new SeasonView(seasonService, leagueService, scheduleGeneratorService, gameView, gameService);
         rosterView = new RosterView(playerService, teamService);
         tournamentView = new TournamentView(tournamentService, tournamentRegistrationService, leagueService, teamService);
 
@@ -136,7 +136,6 @@ public class MainView {
         navItems.setStyle("-fx-padding: 10 0;");
 
         navItems.getChildren().addAll(
-            createSectionHeader("DATA MANAGEMENT", FontAwesomeIcon.DATABASE),
             createNavButton(FontAwesomeIcon.TROPHY, "Leagues", "leagues"),
             createNavButton(FontAwesomeIcon.USERS, "Teams", "teams"),
             createNavButton(FontAwesomeIcon.USER, "Rosters", "rosters"),
@@ -144,14 +143,8 @@ public class MainView {
             createNavButton(FontAwesomeIcon.CALENDAR, "Seasons", "seasons"),
             createNavButton(FontAwesomeIcon.CERTIFICATE, "Tournaments", "tournaments"),
             createNavButton(FontAwesomeIcon.FUTBOL_ALT, "Games", "games"),
-            createSeparator(),
-            createSectionHeader("REGISTRATION", FontAwesomeIcon.EDIT),
             createNavButton(FontAwesomeIcon.CLIPBOARD, "Team Registration", "registration"),
-            createSeparator(),
-            createSectionHeader("PAYMENTS", FontAwesomeIcon.MONEY),
             createNavButton(FontAwesomeIcon.CREDIT_CARD, "Payment Management", "payments"),
-            createSeparator(),
-            createSectionHeader("OPERATIONS", FontAwesomeIcon.COG),
             createNavButton(FontAwesomeIcon.BAR_CHART, "Game Operations", "operations")
         );
 

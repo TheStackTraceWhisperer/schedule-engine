@@ -29,6 +29,7 @@ public class TournamentView {
     private TableView<Tournament> table;
     private ObservableList<Tournament> data;
     private ComboBox<Tournament.TournamentType> typeFilter;
+    private TournamentBracketEditorView bracketEditorView;
 
     public TournamentView(TournamentService tournamentService, TournamentRegistrationService registrationService,
                          LeagueService leagueService, TeamService teamService) {
@@ -37,6 +38,7 @@ public class TournamentView {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.data = FXCollections.observableArrayList();
+        this.bracketEditorView = new TournamentBracketEditorView(tournamentService, registrationService);
     }
 
     public VBox getView() {
@@ -117,16 +119,20 @@ public class TournamentView {
         teamsCol.setPrefWidth(80);
 
         TableColumn<Tournament, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(240);
+        actionCol.setPrefWidth(300);
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button editBtn = new Button("Edit");
+            private final Button bracketBtn = new Button("Bracket");
             private final Button registerBtn = new Button("Register");
             private final Button deleteBtn = new Button("Delete");
             {
                 editBtn.setOnAction(e -> showEditDialog(getTableView().getItems().get(getIndex())));
+                bracketBtn.setOnAction(e -> openBracketEditor(getTableView().getItems().get(getIndex())));
+                bracketBtn.setStyle("-fx-background-color: #ffa502; -fx-text-fill: white;");
                 registerBtn.setOnAction(e -> showRegisterDialog(getTableView().getItems().get(getIndex())));
                 registerBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
                 deleteBtn.setOnAction(e -> deleteTournament(getTableView().getItems().get(getIndex())));
+
                 deleteBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
             }
             @Override
@@ -135,7 +141,7 @@ public class TournamentView {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    HBox box = new HBox(6, editBtn, registerBtn, deleteBtn);
+                    HBox box = new HBox(6, editBtn, bracketBtn, registerBtn, deleteBtn);
                     setGraphic(box);
                 }
             }
@@ -422,6 +428,20 @@ public class TournamentView {
         a.setHeaderText(null);
         a.setContentText(msg);
         a.showAndWait();
+    }
+
+    private void openBracketEditor(Tournament tournament) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Tournament Bracket - " + tournament.getName());
+        dialog.setWidth(1000);
+        dialog.setHeight(700);
+
+        VBox bracketView = bracketEditorView.getView(tournament);
+        dialog.getDialogPane().setContent(bracketView);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        dialog.showAndWait();
+        loadData();
     }
 }
 
