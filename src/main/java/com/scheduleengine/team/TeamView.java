@@ -2,8 +2,10 @@ package com.scheduleengine.team;
 
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.team.domain.Team;
-import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.team.service.TeamService;
+import com.scheduleengine.league.service.LeagueService;
+import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.TablePreferencesUtil;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,7 +22,9 @@ public class TeamView {
     private final LeagueService leagueService;
     private TableView<Team> table;
     private ObservableList<Team> data;
+    private com.scheduleengine.navigation.NavigationHandler navigationHandler;
     private ComboBox<League> leagueFilter;
+    private League filterLeague; // League to filter by, if any
 
     public TeamView(TeamService teamService, LeagueService leagueService) {
         this.teamService = teamService;
@@ -28,12 +32,21 @@ public class TeamView {
         this.data = FXCollections.observableArrayList();
     }
 
+    /**
+     * Set the navigation handler for drill-down navigation
+     */
+    public void setNavigationHandler(com.scheduleengine.navigation.NavigationHandler navigationHandler) {
+        this.navigationHandler = navigationHandler;
+    }
+
     public VBox getView() {
         VBox vbox = new VBox(10);
         vbox.setPadding(new Insets(10));
 
         HBox topBox = new HBox(10);
-        Label title = new Label("Teams");
+        String titleText = filterLeague != null ?
+            "Teams - " + filterLeague.getName() : "Teams";
+        Label title = new Label(titleText);
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         Region spacer = new Region();
@@ -53,6 +66,11 @@ public class TeamView {
         });
         leagueFilter.valueProperty().addListener((obs, oldVal, newVal) -> loadData());
 
+        // If a league filter is already set, pre-select it in the combo box
+        if (filterLeague != null) {
+            leagueFilter.setValue(filterLeague);
+        }
+
         Button clearFilter = new Button("Clear");
         clearFilter.setOnAction(e -> { leagueFilter.setValue(null); loadData(); });
 
@@ -63,15 +81,11 @@ public class TeamView {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
 
-        Button deleteSelected = new Button("Delete Selected");
-        deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-        deleteSelected.setOnAction(e -> deleteSelected());
-
-        topBox.getChildren().addAll(title, spacer, new Label("League:"), leagueFilter, clearFilter, refreshButton, addButton, deleteSelected);
+        topBox.getChildren().addAll(title, spacer, new Label("League:"), leagueFilter, clearFilter, refreshButton, addButton);
 
         table = new TableView<>();
         table.setItems(data);
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         TableColumn<Team, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -96,14 +110,21 @@ public class TeamView {
         leagueCol.setPrefWidth(180);
 
         TableColumn<Team, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(180);
+        actionCol.setPrefWidth(150);
         actionCol.setCellFactory(col -> new TableCell<>() {
-            private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
+            private final Button viewBtn = new Button("View Details");
             {
-                editBtn.setOnAction(e -> showEditDialog(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> deleteTeam(getTableView().getItems().get(getIndex())));
-                deleteBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
+                viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
+                viewBtn.setOnAction(e -> {
+                    Team team = getTableView().getItems().get(getIndex());
+                    if (navigationHandler != null) {
+                        com.scheduleengine.navigation.NavigationContext newContext =
+                            new com.scheduleengine.navigation.NavigationContext()
+                                .navigateTo("teams", "Teams")
+                                .navigateTo("team-detail", team.getName(), team);
+                        navigationHandler.navigate(newContext);
+                    }
+                });
             }
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -111,13 +132,16 @@ public class TeamView {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    HBox box = new HBox(6, editBtn, deleteBtn);
+                    HBox box = new HBox(6, viewBtn);
                     setGraphic(box);
                 }
             }
         });
 
         table.getColumns().addAll(idCol, nameCol, coachCol, emailCol, leagueCol, actionCol);
+
+        // Setup column width persistence
+        TablePreferencesUtil.setupTableColumnPersistence(table, "team.table");
 
         loadData();
 
@@ -131,9 +155,23 @@ public class TeamView {
         loadData();
     }
 
+    /**
+     * Set the league to filter teams by
+     */
+    public void setFilterLeague(League league) {
+        this.filterLeague = league;
+    }
+
+    /**
+     * Clear any league filter
+     */
+    public void clearFilter() {
+        this.filterLeague = null;
+    }
+
     private void loadData() {
         data.clear();
-        League selected = leagueFilter != null ? leagueFilter.getValue() : null;
+        League selected = leagueFilter != null ? leagueFilter.getValue() : filterLeague;
         if (selected != null) {
             data.addAll(teamService.findByLeagueId(selected.getId()));
         } else {
@@ -153,10 +191,22 @@ public class TeamView {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
+        // Configure columns: label column fixed, field column grows
+        ColumnConstraints labelCol = new ColumnConstraints();
+        labelCol.setMinWidth(Region.USE_PREF_SIZE);
+        ColumnConstraints fieldCol = new ColumnConstraints();
+        fieldCol.setHgrow(Priority.ALWAYS);
+        fieldCol.setMinWidth(350);
+        grid.getColumnConstraints().addAll(labelCol, fieldCol);
+
         TextField nameField = new TextField();
+        nameField.setMaxWidth(Double.MAX_VALUE);
         TextField coachField = new TextField();
+        coachField.setMaxWidth(Double.MAX_VALUE);
         TextField emailField = new TextField();
+        emailField.setMaxWidth(Double.MAX_VALUE);
         ComboBox<League> leagueCombo = new ComboBox<>(FXCollections.observableArrayList(leagueService.findAll()));
+        leagueCombo.setMaxWidth(Double.MAX_VALUE);
         configureLeagueCombo(leagueCombo);
 
         grid.add(new Label("Name:"), 0, 0);
@@ -169,6 +219,10 @@ public class TeamView {
         grid.add(leagueCombo, 1, 3);
 
         dialog.getDialogPane().setContent(grid);
+
+        // Make dialog resizable and persist size
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
+            DialogUtil.makeResizable(dialog, "team.add", 600, 450));
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
@@ -192,90 +246,7 @@ public class TeamView {
         });
     }
 
-    private void showEditDialog(Team team) {
-        Dialog<Team> dialog = new Dialog<>();
-        dialog.setTitle("Edit Team");
 
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField nameField = new TextField(team.getName());
-        TextField coachField = new TextField(team.getCoach());
-        TextField emailField = new TextField(team.getContactEmail());
-        ComboBox<League> leagueCombo = new ComboBox<>(FXCollections.observableArrayList(leagueService.findAll()));
-        configureLeagueCombo(leagueCombo);
-        leagueCombo.setValue(team.getLeague());
-
-        grid.add(new Label("Name:"), 0, 0);
-        grid.add(nameField, 1, 0);
-        grid.add(new Label("Coach:"), 0, 1);
-        grid.add(coachField, 1, 1);
-        grid.add(new Label("Email:"), 0, 2);
-        grid.add(emailField, 1, 2);
-        grid.add(new Label("League:"), 0, 3);
-        grid.add(leagueCombo, 1, 3);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                if (nameField.getText().isBlank()) {
-                    showError("Validation", "Name is required");
-                    return null;
-                }
-                team.setName(nameField.getText());
-                team.setCoach(coachField.getText());
-                team.setContactEmail(emailField.getText());
-                team.setLeague(leagueCombo.getValue());
-                return team;
-            }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(updated -> {
-            teamService.update(team.getId(), updated);
-            loadData();
-        });
-    }
-
-    private void deleteTeam(Team team) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Team");
-        alert.setHeaderText("Are you sure?");
-        alert.setContentText("Do you want to delete the team: " + team.getName() + "?");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                teamService.deleteById(team.getId());
-                loadData();
-            }
-        });
-    }
-
-    private void deleteSelected() {
-        var selected = table.getSelectionModel().getSelectedItems();
-        if (selected == null || selected.isEmpty()) {
-            showError("Delete Teams", "Select one or more teams to delete.");
-            return;
-        }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Teams");
-        alert.setHeaderText("Delete " + selected.size() + " teams?");
-        alert.setContentText("This will remove the selected teams.");
-        alert.showAndWait().ifPresent(resp -> {
-            if (resp == ButtonType.OK) {
-                // Copy to avoid concurrent modification
-                var toDelete = FXCollections.observableArrayList(selected);
-                toDelete.forEach(t -> teamService.deleteById(t.getId()));
-                loadData();
-            }
-        });
-    }
 
     private void configureLeagueCombo(ComboBox<League> combo) {
         combo.setConverter(new StringConverter<>() {

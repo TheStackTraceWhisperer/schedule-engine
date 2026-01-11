@@ -2,6 +2,8 @@ package com.scheduleengine.field;
 
 import com.scheduleengine.field.domain.Field;
 import com.scheduleengine.field.service.FieldService;
+import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.TablePreferencesUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -89,6 +91,9 @@ public class FieldView {
 
         table.getColumns().addAll(idCol, nameCol, locationCol, addressCol, actionCol);
 
+        // Setup column width persistence (unique table id)
+        TablePreferencesUtil.setupTableColumnPersistence(table, "field.table");
+
         loadData();
         
         vbox.getChildren().addAll(topBox, table);
@@ -118,10 +123,21 @@ public class FieldView {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
         
+        // Configure columns: label column fixed, field column grows
+        ColumnConstraints labelCol = new ColumnConstraints();
+        labelCol.setMinWidth(Region.USE_PREF_SIZE);
+        ColumnConstraints fieldCol = new ColumnConstraints();
+        fieldCol.setHgrow(Priority.ALWAYS);
+        fieldCol.setMinWidth(350);
+        grid.getColumnConstraints().addAll(labelCol, fieldCol);
+
         TextField nameField = new TextField();
+        nameField.setMaxWidth(Double.MAX_VALUE);
         TextField locationField = new TextField();
+        locationField.setMaxWidth(Double.MAX_VALUE);
         TextField addressField = new TextField();
-        
+        addressField.setMaxWidth(Double.MAX_VALUE);
+
         grid.add(new Label("Name:"), 0, 0);
         grid.add(nameField, 1, 0);
         grid.add(new Label("Location:"), 0, 1);
@@ -131,6 +147,10 @@ public class FieldView {
         
         dialog.getDialogPane().setContent(grid);
         
+        // Make dialog resizable and persist size
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
+            DialogUtil.makeResizable(dialog, "field.add", 600, 400));
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 if (nameField.getText().isBlank()) {
@@ -164,9 +184,20 @@ public class FieldView {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
+        // Configure columns: label column fixed, field column grows
+        ColumnConstraints labelCol = new ColumnConstraints();
+        labelCol.setMinWidth(Region.USE_PREF_SIZE);
+        ColumnConstraints fieldCol = new ColumnConstraints();
+        fieldCol.setHgrow(Priority.ALWAYS);
+        fieldCol.setMinWidth(350);
+        grid.getColumnConstraints().addAll(labelCol, fieldCol);
+
         TextField nameField = new TextField(field.getName());
+        nameField.setMaxWidth(Double.MAX_VALUE);
         TextField locationField = new TextField(field.getLocation());
+        locationField.setMaxWidth(Double.MAX_VALUE);
         TextField addressField = new TextField(field.getAddress());
+        addressField.setMaxWidth(Double.MAX_VALUE);
 
         grid.add(new Label("Name:"), 0, 0);
         grid.add(nameField, 1, 0);
@@ -176,6 +207,10 @@ public class FieldView {
         grid.add(addressField, 1, 2);
 
         dialog.getDialogPane().setContent(grid);
+
+        // Make dialog resizable and persist size
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
+            DialogUtil.makeResizable(dialog, "field.edit", 600, 400));
 
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {

@@ -10,6 +10,7 @@ import com.scheduleengine.game.service.GameService;
 import com.scheduleengine.season.service.SeasonService;
 import com.scheduleengine.team.service.TeamService;
 import com.scheduleengine.league.service.LeagueService;
+import com.scheduleengine.common.TablePreferencesUtil;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -34,6 +35,10 @@ public class GameView {
     private ObservableList<Game> data;
     private ComboBox<Season> seasonFilter;
     private ComboBox<League> leagueFilter;
+    private Team filterTeam; // Team to filter by, if any
+    private Season filterSeason; // Season to filter by, if any
+    private League filterLeague; // League to filter by, if any
+    private com.scheduleengine.navigation.NavigationHandler navigationHandler;
 
     public GameView(GameService gameService, TeamService teamService,
                    FieldService fieldService, SeasonService seasonService, LeagueService leagueService) {
@@ -45,12 +50,28 @@ public class GameView {
         this.data = FXCollections.observableArrayList();
     }
     
+    /**
+     * Set the navigation handler for drill-down navigation
+     */
+    public void setNavigationHandler(com.scheduleengine.navigation.NavigationHandler navigationHandler) {
+        this.navigationHandler = navigationHandler;
+    }
+
     public VBox getView() {
         VBox vbox = new VBox(10);
         vbox.setPadding(new Insets(10));
         
         HBox topBox = new HBox(10);
-        Label title = new Label("Games");
+        // Build title showing active filter
+        String titleText = "Games";
+        if (filterTeam != null) {
+            titleText = "Games - " + filterTeam.getName();
+        } else if (filterSeason != null) {
+            titleText = "Games - " + filterSeason.getName();
+        } else if (filterLeague != null) {
+            titleText = "Games - " + filterLeague.getName();
+        }
+        Label title = new Label(titleText);
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
         
         Region spacer = new Region();
@@ -70,6 +91,11 @@ public class GameView {
         });
         leagueFilter.valueProperty().addListener((obs, o, n) -> loadData());
 
+        // Pre-select league if filter is set
+        if (filterLeague != null) {
+            leagueFilter.setValue(filterLeague);
+        }
+
         seasonFilter = new ComboBox<>(FXCollections.observableArrayList(seasonService.findAll()));
         seasonFilter.setPromptText("Filter by Season");
         seasonFilter.setConverter(new StringConverter<>() {
@@ -84,6 +110,11 @@ public class GameView {
         });
         seasonFilter.valueProperty().addListener((obs, oldVal, newVal) -> loadData());
 
+        // Pre-select season if filter is set
+        if (filterSeason != null) {
+            seasonFilter.setValue(filterSeason);
+        }
+
         Button clearFilter = new Button("Clear");
         clearFilter.setOnAction(e -> { seasonFilter.setValue(null); leagueFilter.setValue(null); loadData(); });
 
@@ -94,13 +125,26 @@ public class GameView {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
         
-        Button deleteSelected = new Button("Delete Selected");
-        deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-        deleteSelected.setOnAction(e -> deleteSelected());
+        // Add "Back to Team Detail" button if filtered by team
+        if (filterTeam != null && navigationHandler != null) {
+            Button backToTeamBtn = new Button("← Back to " + filterTeam.getName());
+            backToTeamBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
+            backToTeamBtn.setOnAction(e -> {
+                com.scheduleengine.navigation.NavigationContext newContext =
+                    new com.scheduleengine.navigation.NavigationContext()
+                        .navigateTo("teams", "Teams")
+                        .navigateTo("team-detail", filterTeam.getName(), filterTeam);
+                navigationHandler.navigate(newContext);
+            });
 
-        topBox.getChildren().addAll(title, spacer,
-            new Label("League:"), leagueFilter,
-            new Label("Season:"), seasonFilter, clearFilter, refreshButton, addButton, deleteSelected);
+            topBox.getChildren().addAll(title, spacer, backToTeamBtn,
+                new Label("League:"), leagueFilter,
+                new Label("Season:"), seasonFilter, clearFilter, refreshButton, addButton);
+        } else {
+            topBox.getChildren().addAll(title, spacer,
+                new Label("League:"), leagueFilter,
+                new Label("Season:"), seasonFilter, clearFilter, refreshButton, addButton);
+        }
 
         table = new TableView<>();
         table.setItems(data);
@@ -150,28 +194,33 @@ public class GameView {
         scoreCol.setPrefWidth(100);
 
         TableColumn<Game, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(200);
+        actionCol.setPrefWidth(160);
         actionCol.setCellFactory(col -> new TableCell<>() {
-            private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
+            private final Button viewBtn = new Button("View Details");
             {
-                editBtn.setOnAction(e -> showEditDialog(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> deleteGame(getTableView().getItems().get(getIndex())));
-                deleteBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
+                viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
+                viewBtn.setOnAction(e -> {
+                    Game game = getTableView().getItems().get(getIndex());
+                    if (navigationHandler != null) {
+                        com.scheduleengine.navigation.NavigationContext newContext =
+                            new com.scheduleengine.navigation.NavigationContext()
+                                .navigateTo("games", "Games")
+                                .navigateTo("game-detail", "Game #" + game.getId(), game);
+                        navigationHandler.navigate(newContext);
+                    }
+                });
             }
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox box = new HBox(6, editBtn, deleteBtn);
-                    setGraphic(box);
-                }
+                setGraphic(empty ? null : new HBox(6, viewBtn));
             }
         });
 
         table.getColumns().addAll(idCol, dateCol, homeCol, awayCol, fieldCol, seasonCol, statusCol, scoreCol, actionCol);
+
+        // Setup column width persistence (unique table id)
+        TablePreferencesUtil.setupTableColumnPersistence(table, "game.table");
 
         loadData();
         
@@ -185,11 +234,44 @@ public class GameView {
         loadData();
     }
 
+    /**
+     * Set the team to filter games by
+     */
+    public void setFilterTeam(Team team) {
+        this.filterTeam = team;
+    }
+
+    /**
+     * Set the season to filter games by
+     */
+    public void setFilterSeason(Season season) {
+        this.filterSeason = season;
+    }
+
+    /**
+     * Set the league to filter games by
+     */
+    public void setFilterLeague(League league) {
+        this.filterLeague = league;
+    }
+
+    /**
+     * Clear all filters
+     */
+    public void clearFilter() {
+        this.filterTeam = null;
+        this.filterSeason = null;
+        this.filterLeague = null;
+    }
+
     private void loadData() {
         data.clear();
-        Season selectedSeason = seasonFilter != null ? seasonFilter.getValue() : null;
-        League selectedLeague = leagueFilter != null ? leagueFilter.getValue() : null;
+        // Use combo box values if set, otherwise use preset filters
+        Season selectedSeason = seasonFilter != null ? seasonFilter.getValue() : filterSeason;
+        League selectedLeague = leagueFilter != null ? leagueFilter.getValue() : filterLeague;
         var list = selectedSeason != null ? gameService.findBySeasonId(selectedSeason.getId()) : gameService.findAll();
+
+        // Filter by league
         if (selectedLeague != null) {
             list = list.stream().filter(g -> {
                 if (g.getSeason() != null && g.getSeason().getLeague() != null && selectedLeague.getId().equals(g.getSeason().getLeague().getId())) {
@@ -204,6 +286,16 @@ public class GameView {
                 return false;
             }).toList();
         }
+
+        // Filter by team (if navigating from team detail)
+        if (filterTeam != null) {
+            list = list.stream().filter(g -> {
+                boolean isHomeTeam = g.getHomeTeam() != null && filterTeam.getId().equals(g.getHomeTeam().getId());
+                boolean isAwayTeam = g.getAwayTeam() != null && filterTeam.getId().equals(g.getAwayTeam().getId());
+                return isHomeTeam || isAwayTeam;
+            }).toList();
+        }
+
         data.addAll(list);
     }
     
@@ -253,7 +345,7 @@ public class GameView {
         });
     }
 
-    private GridPane buildGameForm(Game existing) {
+    public GridPane buildGameForm(Game existing) {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -322,7 +414,7 @@ public class GameView {
         return grid;
     }
 
-    private Game buildGameFromForm(GridPane grid, Game base) {
+    public Game buildGameFromForm(GridPane grid, Game base) {
         // Retrieve nodes by position reliably
         DatePicker dp = (DatePicker) grid.getChildren().filtered(n -> GridPane.getRowIndex(n) != null && GridPane.getColumnIndex(n) != null && GridPane.getRowIndex(n) == 0 && GridPane.getColumnIndex(n) == 1).get(0);
         HBox timeBox = (HBox) grid.getChildren().filtered(n -> GridPane.getRowIndex(n) == 1 && GridPane.getColumnIndex(n) == 1).get(0);
@@ -374,25 +466,6 @@ public class GameView {
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 gameService.deleteById(game.getId());
-                loadData();
-            }
-        });
-    }
-
-    private void deleteSelected() {
-        var selected = table.getSelectionModel().getSelectedItems();
-        if (selected == null || selected.isEmpty()) {
-            showError("Delete Games", "Select one or more games to delete.");
-            return;
-        }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Games");
-        alert.setHeaderText("Delete " + selected.size() + " games?");
-        alert.setContentText("This will remove the selected games.");
-        alert.showAndWait().ifPresent(resp -> {
-            if (resp == ButtonType.OK) {
-                var toDelete = FXCollections.observableArrayList(selected);
-                toDelete.forEach(g -> gameService.deleteById(g.getId()));
                 loadData();
             }
         });

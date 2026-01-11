@@ -2,6 +2,7 @@ package com.scheduleengine.player;
 
 import com.scheduleengine.player.service.PlayerService;
 import com.scheduleengine.team.service.TeamService;
+import com.scheduleengine.navigation.NavigationHandler;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -27,6 +28,9 @@ class RosterViewTest {
     @Mock
     private TeamService teamService;
 
+    @Mock
+    private NavigationHandler navigationHandler;
+
     private RosterView rosterView;
 
     @Start
@@ -35,7 +39,7 @@ class RosterViewTest {
 
         when(teamService.findAll()).thenReturn(Collections.emptyList());
 
-        rosterView = new RosterView(playerService, teamService);
+        rosterView = new RosterView(playerService, teamService, navigationHandler);
 
         VBox view = rosterView.getView();
         Scene scene = new Scene(view, 1000, 600);
@@ -58,10 +62,6 @@ class RosterViewTest {
         verifyThat("Refresh", hasText("Refresh"));
     }
 
-    @Test
-    void shouldDisplayDeleteSelectedButton() {
-        verifyThat("Delete Selected", hasText("Delete Selected"));
-    }
 
     @Test
     void shouldLoadTeamsForFilter() {

@@ -57,7 +57,7 @@ public class Tournament {
     private String location;
 
     public enum TournamentType {
-        LEAGUE_SCOPED("League Only - Restricted to teams within a specific league"),
+        LEAGUE("League Only - Restricted to teams within a specific league"),
         OPEN("Open - Any team can register"),
         INVITATIONAL("Invitational - Invitation only by tournament organizer");
 
@@ -179,4 +179,3 @@ public class Tournament {
         this.location = location;
     }
 }
-

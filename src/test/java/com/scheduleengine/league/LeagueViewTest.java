@@ -57,10 +57,6 @@ class LeagueViewTest {
         verifyThat("Refresh", hasText("Refresh"));
     }
 
-    @Test
-    void shouldDisplayDeleteSelectedButton() {
-        verifyThat("Delete Selected", hasText("Delete Selected"));
-    }
 
     @Test
     void shouldLoadDataOnInitialization() {

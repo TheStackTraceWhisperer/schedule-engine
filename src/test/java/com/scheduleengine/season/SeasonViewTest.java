@@ -77,10 +77,6 @@ public class SeasonViewTest {
     verifyThat("Generate Schedule", hasText("Generate Schedule"));
   }
 
-  @Test
-  void shouldDisplayDeleteSelectedButton() {
-    verifyThat("Delete Selected", hasText("Delete Selected"));
-  }
 
   @Test
   void shouldLoadDataOnInitialization() {

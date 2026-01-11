@@ -4,6 +4,7 @@ import com.scheduleengine.player.domain.Player;
 import com.scheduleengine.team.domain.Team;
 import com.scheduleengine.player.service.PlayerService;
 import com.scheduleengine.team.service.TeamService;
+import com.scheduleengine.common.TablePreferencesUtil;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,14 +18,16 @@ public class RosterView {
 
     private final PlayerService playerService;
     private final TeamService teamService;
+    private final com.scheduleengine.navigation.NavigationHandler navigationHandler;
     private TableView<Player> table;
     private ObservableList<Player> data;
     private ComboBox<Team> teamFilter;
     private Team selectedTeam;
 
-    public RosterView(PlayerService playerService, TeamService teamService) {
+    public RosterView(PlayerService playerService, TeamService teamService, com.scheduleengine.navigation.NavigationHandler navigationHandler) {
         this.playerService = playerService;
         this.teamService = teamService;
+        this.navigationHandler = navigationHandler;
         this.data = FXCollections.observableArrayList();
     }
 
@@ -33,7 +36,9 @@ public class RosterView {
         vbox.setPadding(new Insets(10));
 
         HBox topBox = new HBox(10);
-        Label title = new Label("Team Rosters");
+        String titleText = selectedTeam != null ?
+            "Roster - " + selectedTeam.getName() : "Team Rosters";
+        Label title = new Label(titleText);
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
         Region spacer = new Region();
@@ -56,6 +61,11 @@ public class RosterView {
             loadData();
         });
 
+        // If a team filter is already set, pre-select it in the combo box
+        if (selectedTeam != null) {
+            teamFilter.setValue(selectedTeam);
+        }
+
         Button addButton = new Button("Add Player");
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> {
@@ -69,15 +79,11 @@ public class RosterView {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
 
-        Button deleteSelected = new Button("Delete Selected");
-        deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-        deleteSelected.setOnAction(e -> deleteSelected());
-
-        topBox.getChildren().addAll(title, spacer, new Label("Team:"), teamFilter, refreshButton, addButton, deleteSelected);
+        topBox.getChildren().addAll(title, spacer, new Label("Team:"), teamFilter, refreshButton, addButton);
 
         table = new TableView<>();
         table.setItems(data);
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         TableColumn<Player, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -106,14 +112,21 @@ public class RosterView {
         teamCol.setPrefWidth(140);
 
         TableColumn<Player, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(180);
+        actionCol.setPrefWidth(150);
         actionCol.setCellFactory(col -> new TableCell<>() {
-            private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
+            private final Button viewBtn = new Button("View Details");
             {
-                editBtn.setOnAction(e -> showEditDialog(getTableView().getItems().get(getIndex())));
-                deleteBtn.setOnAction(e -> deletePlayer(getTableView().getItems().get(getIndex())));
-                deleteBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
+                viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
+                viewBtn.setOnAction(e -> {
+                    Player player = getTableView().getItems().get(getIndex());
+                    if (navigationHandler != null) {
+                        com.scheduleengine.navigation.NavigationContext newContext =
+                            new com.scheduleengine.navigation.NavigationContext()
+                                .navigateTo("rosters", "Rosters")
+                                .navigateTo("player-detail", player.getFullName(), player);
+                        navigationHandler.navigate(newContext);
+                    }
+                });
             }
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -121,13 +134,16 @@ public class RosterView {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    HBox box = new HBox(6, editBtn, deleteBtn);
+                    HBox box = new HBox(6, viewBtn);
                     setGraphic(box);
                 }
             }
         });
 
         table.getColumns().addAll(idCol, firstNameCol, lastNameCol, jerseyCol, positionCol, teamCol, actionCol);
+
+        // Setup column width persistence
+        TablePreferencesUtil.setupTableColumnPersistence(table, "roster.table");
 
         loadData();
 
@@ -139,6 +155,20 @@ public class RosterView {
 
     public void refresh() {
         loadData();
+    }
+
+    /**
+     * Set the team to filter roster by
+     */
+    public void setFilterTeam(Team team) {
+        this.selectedTeam = team;
+    }
+
+    /**
+     * Clear any team filter
+     */
+    public void clearFilter() {
+        this.selectedTeam = null;
     }
 
     private void loadData() {
@@ -202,86 +232,6 @@ public class RosterView {
         });
     }
 
-    private void showEditDialog(Player player) {
-        Dialog<Player> dialog = new Dialog<>();
-        dialog.setTitle("Edit Player");
-
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField firstNameField = new TextField(player.getFirstName());
-        TextField lastNameField = new TextField(player.getLastName());
-        Spinner<Integer> jerseySpinner = new Spinner<>(0, 99, player.getJerseyNumber() != null ? player.getJerseyNumber() : 0);
-        TextField positionField = new TextField(player.getPosition() != null ? player.getPosition() : "");
-
-        grid.add(new Label("First Name:"), 0, 0);
-        grid.add(firstNameField, 1, 0);
-        grid.add(new Label("Last Name:"), 0, 1);
-        grid.add(lastNameField, 1, 1);
-        grid.add(new Label("Jersey Number:"), 0, 2);
-        grid.add(jerseySpinner, 1, 2);
-        grid.add(new Label("Position:"), 0, 3);
-        grid.add(positionField, 1, 3);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(btn -> {
-            if (btn == saveButtonType) {
-                if (firstNameField.getText().isBlank() || lastNameField.getText().isBlank()) {
-                    showError("Validation", "First and last names are required.");
-                    return null;
-                }
-                player.setFirstName(firstNameField.getText());
-                player.setLastName(lastNameField.getText());
-                player.setJerseyNumber(jerseySpinner.getValue());
-                player.setPosition(positionField.getText());
-                return player;
-            }
-            return null;
-        });
-
-        dialog.showAndWait().ifPresent(updated -> {
-            playerService.update(player.getId(), updated);
-            loadData();
-        });
-    }
-
-    private void deletePlayer(Player player) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Player");
-        alert.setHeaderText("Are you sure?");
-        alert.setContentText("Do you want to delete " + player.getFullName() + "?");
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                playerService.deleteById(player.getId());
-                loadData();
-            }
-        });
-    }
-
-    private void deleteSelected() {
-        var selected = table.getSelectionModel().getSelectedItems();
-        if (selected == null || selected.isEmpty()) {
-            showError("Delete Players", "Select one or more players to delete.");
-            return;
-        }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Players");
-        alert.setHeaderText("Delete " + selected.size() + " players?");
-        alert.setContentText("This will remove the selected players from the roster.");
-        alert.showAndWait().ifPresent(resp -> {
-            if (resp == ButtonType.OK) {
-                var toDelete = FXCollections.observableArrayList(selected);
-                toDelete.forEach(p -> playerService.deleteById(p.getId()));
-                loadData();
-            }
-        });
-    }
 
     private void showError(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);

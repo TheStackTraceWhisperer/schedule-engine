@@ -6,18 +6,23 @@ import com.scheduleengine.season.domain.Season;
 import com.scheduleengine.team.domain.Team;
 import com.scheduleengine.player.domain.Player;
 import com.scheduleengine.tournament.domain.Tournament;
+import com.scheduleengine.game.domain.Game;
 import com.scheduleengine.field.service.FieldService;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.season.service.SeasonService;
 import com.scheduleengine.team.service.TeamService;
 import com.scheduleengine.player.service.PlayerService;
 import com.scheduleengine.tournament.service.TournamentService;
+import com.scheduleengine.game.service.GameService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -30,16 +35,18 @@ public class DataSeeder implements CommandLineRunner {
     private final SeasonService seasonService;
     private final PlayerService playerService;
     private final TournamentService tournamentService;
+    private final GameService gameService;
 
     public DataSeeder(LeagueService leagueService, TeamService teamService,
                      FieldService fieldService, SeasonService seasonService, PlayerService playerService,
-                     TournamentService tournamentService) {
+                     TournamentService tournamentService, GameService gameService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
         this.seasonService = seasonService;
         this.playerService = playerService;
         this.tournamentService = tournamentService;
+        this.gameService = gameService;
     }
 
     @Override
@@ -50,7 +57,7 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        log.info("Seeding database with demo data...");
+        log.info("Seeding database with comprehensive historical data (2024-2026)...");
 
         // Create Leagues
         League soccerLeague = new League();
@@ -89,19 +96,13 @@ public class DataSeeder implements CommandLineRunner {
         Team lakesideLakers = createTeam("Lakeside Lakers", "Nicole Martin", "nmartin@example.com", basketballLeague);
 
         // Create Fields
-        createField("Memorial Stadium", "Downtown", "123 Main Street, City Center");
-        createField("Riverside Park Field", "Riverside District", "456 River Road, Riverside");
-        createField("North Sports Complex", "North End", "789 North Avenue, North End");
-        createField("Community Center Court", "Westside", "321 West Boulevard, Westside");
-        createField("Central Arena", "Downtown", "555 Central Plaza, City Center");
+        Field memorialStadium = createField("Memorial Stadium", "Downtown", "123 Main Street, City Center");
+        Field riversidePark = createField("Riverside Park Field", "Riverside District", "456 River Road, Riverside");
+        Field northComplex = createField("North Sports Complex", "North End", "789 North Avenue, North End");
+        Field communityCourt = createField("Community Center Court", "Westside", "321 West Boulevard, Westside");
+        Field centralArena = createField("Central Arena", "Downtown", "555 Central Plaza, City Center");
 
-        // Create Seasons
-        createSeason("Spring 2026", LocalDate.of(2026, 3, 1), LocalDate.of(2026, 5, 31), soccerLeague);
-        createSeason("Summer 2026", LocalDate.of(2026, 6, 1), LocalDate.of(2026, 8, 31), soccerLeague);
-        createSeason("Youth Spring 2026", LocalDate.of(2026, 3, 15), LocalDate.of(2026, 6, 15), youthLeague);
-        createSeason("Winter League 2026", LocalDate.of(2026, 1, 15), LocalDate.of(2026, 3, 31), basketballLeague);
-
-        // Create Rosters for Soccer Teams
+        // Create Rosters (same teams over the years)
         createSoccerRoster(thunderUnited);
         createSoccerRoster(lightningFC);
         createSoccerRoster(stormStrikers);
@@ -109,43 +110,139 @@ public class DataSeeder implements CommandLineRunner {
         createSoccerRoster(dragonWarriors);
         createSoccerRoster(eagleKnights);
 
-        // Create Rosters for Youth Soccer Teams
         createYouthSoccerRoster(juniorRockets);
         createYouthSoccerRoster(youngLions);
         createYouthSoccerRoster(futureStars);
         createYouthSoccerRoster(risingChampions);
 
-        // Create Rosters for Basketball Teams
         createBasketballRoster(downtownDunkers);
         createBasketballRoster(uptownShooters);
         createBasketballRoster(riversideRaptors);
         createBasketballRoster(lakesideLakers);
 
-        // Create Tournaments
+        // Team lists for game generation
+        List<Team> soccerTeams = List.of(thunderUnited, lightningFC, stormStrikers, phoenixRising, dragonWarriors, eagleKnights);
+        List<Team> youthTeams = List.of(juniorRockets, youngLions, futureStars, risingChampions);
+        List<Team> basketballTeams = List.of(downtownDunkers, uptownShooters, riversideRaptors, lakesideLakers);
+        List<Field> outdoorFields = List.of(memorialStadium, riversidePark, northComplex);
+        List<Field> indoorFields = List.of(communityCourt, centralArena);
+
+        // ========== 2024 SEASONS (All Complete) ==========
+        log.info("Creating 2024 historical seasons...");
+
+        // Soccer Spring 2024 (COMPLETED)
+        Season spring2024 = createSeason("Spring 2024", LocalDate.of(2024, 3, 1), LocalDate.of(2024, 5, 31), soccerLeague);
+        createGamesForSeason(spring2024, soccerTeams, outdoorFields, LocalTime.of(14, 0), true);
+
+        // Soccer Summer 2024 (COMPLETED)
+        Season summer2024 = createSeason("Summer 2024", LocalDate.of(2024, 6, 1), LocalDate.of(2024, 8, 31), soccerLeague);
+        createGamesForSeason(summer2024, soccerTeams, outdoorFields, LocalTime.of(14, 0), true);
+
+        // Soccer Fall 2024 (COMPLETED)
+        Season fall2024 = createSeason("Fall 2024", LocalDate.of(2024, 9, 1), LocalDate.of(2024, 11, 30), soccerLeague);
+        createGamesForSeason(fall2024, soccerTeams, outdoorFields, LocalTime.of(14, 0), true);
+
+        // Youth Spring 2024 (COMPLETED)
+        Season youthSpring2024 = createSeason("Youth Spring 2024", LocalDate.of(2024, 3, 15), LocalDate.of(2024, 6, 15), youthLeague);
+        createGamesForSeason(youthSpring2024, youthTeams, outdoorFields, LocalTime.of(10, 0), true);
+
+        // Youth Fall 2024 (COMPLETED)
+        Season youthFall2024 = createSeason("Youth Fall 2024", LocalDate.of(2024, 9, 1), LocalDate.of(2024, 11, 30), youthLeague);
+        createGamesForSeason(youthFall2024, youthTeams, outdoorFields, LocalTime.of(10, 0), true);
+
+        // Basketball Winter 2024 (COMPLETED)
+        Season winter2024 = createSeason("Winter League 2024", LocalDate.of(2024, 1, 15), LocalDate.of(2024, 3, 31), basketballLeague);
+        createGamesForSeason(winter2024, basketballTeams, indoorFields, LocalTime.of(19, 0), true);
+
+        // ========== 2025 SEASONS (All Complete) ==========
+        log.info("Creating 2025 historical seasons...");
+
+        // Soccer Spring 2025 (COMPLETED)
+        Season spring2025 = createSeason("Spring 2025", LocalDate.of(2025, 3, 1), LocalDate.of(2025, 5, 31), soccerLeague);
+        createGamesForSeason(spring2025, soccerTeams, outdoorFields, LocalTime.of(14, 0), true);
+
+        // Soccer Summer 2025 (COMPLETED)
+        Season summer2025 = createSeason("Summer 2025", LocalDate.of(2025, 6, 1), LocalDate.of(2025, 8, 31), soccerLeague);
+        createGamesForSeason(summer2025, soccerTeams, outdoorFields, LocalTime.of(14, 0), true);
+
+        // Soccer Fall 2025 (COMPLETED)
+        Season fall2025 = createSeason("Fall 2025", LocalDate.of(2025, 9, 1), LocalDate.of(2025, 11, 30), soccerLeague);
+        createGamesForSeason(fall2025, soccerTeams, outdoorFields, LocalTime.of(14, 0), true);
+
+        // Youth Spring 2025 (COMPLETED)
+        Season youthSpring2025 = createSeason("Youth Spring 2025", LocalDate.of(2025, 3, 15), LocalDate.of(2025, 6, 15), youthLeague);
+        createGamesForSeason(youthSpring2025, youthTeams, outdoorFields, LocalTime.of(10, 0), true);
+
+        // Youth Summer 2025 (COMPLETED)
+        Season youthSummer2025 = createSeason("Youth Summer 2025", LocalDate.of(2025, 6, 20), LocalDate.of(2025, 9, 15), youthLeague);
+        createGamesForSeason(youthSummer2025, youthTeams, outdoorFields, LocalTime.of(10, 0), true);
+
+        // Youth Fall 2025 (COMPLETED)
+        Season youthFall2025 = createSeason("Youth Fall 2025", LocalDate.of(2025, 9, 20), LocalDate.of(2025, 12, 15), youthLeague);
+        createGamesForSeason(youthFall2025, youthTeams, outdoorFields, LocalTime.of(10, 0), true);
+
+        // Basketball Winter 2025 (COMPLETED)
+        Season winter2025 = createSeason("Winter League 2025", LocalDate.of(2025, 1, 15), LocalDate.of(2025, 3, 31), basketballLeague);
+        createGamesForSeason(winter2025, basketballTeams, indoorFields, LocalTime.of(19, 0), true);
+
+        // Basketball Fall 2025 (COMPLETED)
+        Season fallBball2025 = createSeason("Fall League 2025", LocalDate.of(2025, 10, 1), LocalDate.of(2025, 12, 31), basketballLeague);
+        createGamesForSeason(fallBball2025, basketballTeams, indoorFields, LocalTime.of(19, 0), true);
+
+        // ========== 2026 SEASONS (Current/Upcoming) ==========
+        log.info("Creating 2026 current seasons...");
+
+        // Basketball Winter 2026 (IN PROGRESS - current date is Jan 10, 2026)
+        Season winter2026 = createSeason("Winter League 2026", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 3, 31), basketballLeague);
+        createGamesForSeason(winter2026, basketballTeams, indoorFields, LocalTime.of(19, 0), true);
+
+        // Soccer Spring 2026 (UPCOMING)
+        Season spring2026 = createSeason("Spring 2026", LocalDate.of(2026, 3, 1), LocalDate.of(2026, 5, 31), soccerLeague);
+        createGamesForSeason(spring2026, soccerTeams, outdoorFields, LocalTime.of(14, 0), false);
+
+        // Soccer Summer 2026 (UPCOMING)
+        Season summer2026 = createSeason("Summer 2026", LocalDate.of(2026, 6, 1), LocalDate.of(2026, 8, 31), soccerLeague);
+        createGamesForSeason(summer2026, soccerTeams, outdoorFields, LocalTime.of(14, 0), false);
+
+        // Youth Spring 2026 (UPCOMING)
+        Season youthSpring2026 = createSeason("Youth Spring 2026", LocalDate.of(2026, 3, 15), LocalDate.of(2026, 6, 15), youthLeague);
+        createGamesForSeason(youthSpring2026, youthTeams, outdoorFields, LocalTime.of(10, 0), false);
+
+        // ========== TOURNAMENTS ==========
+        log.info("Creating tournaments...");
+
+        // Historical tournaments
+        createTournament("Premier Cup 2024", "Championship 2024",
+                Tournament.TournamentType.LEAGUE, LocalDate.of(2024, 7, 1), LocalDate.of(2024, 7, 15),
+                soccerLeague, 8, LocalDate.of(2024, 6, 20), 50.0, "Memorial Stadium");
+
+        createTournament("Premier Cup 2025", "Championship 2025",
+                Tournament.TournamentType.LEAGUE, LocalDate.of(2025, 7, 1), LocalDate.of(2025, 7, 15),
+                soccerLeague, 8, LocalDate.of(2025, 6, 20), 50.0, "Memorial Stadium");
+
+        // Upcoming tournaments
         createTournament("Premier Cup 2026", "Annual championship for premier league teams",
-                Tournament.TournamentType.LEAGUE_SCOPED, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
+                Tournament.TournamentType.LEAGUE, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 15),
                 soccerLeague, 8, LocalDate.of(2026, 6, 20), 50.0, "Memorial Stadium");
 
-        createTournament("Open Spring Classic", "Open tournament - all teams welcome",
+        createTournament("Open Spring Classic 2026", "Open tournament - all teams welcome",
                 Tournament.TournamentType.OPEN, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 4, 10),
                 null, 16, LocalDate.of(2026, 3, 25), 25.0, "Central Arena");
 
-        createTournament("Elite Invitational", "Invitation only showcase tournament",
-                Tournament.TournamentType.INVITATIONAL, LocalDate.of(2026, 8, 15), LocalDate.of(2026, 8, 22),
-                null, 8, LocalDate.of(2026, 8, 1), 100.0, "North Sports Complex");
-
-        createTournament("Youth Summer Showcase", "Youth development tournament",
-                Tournament.TournamentType.LEAGUE_SCOPED, LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 17),
+        createTournament("Youth Summer Showcase 2026", "Youth development tournament",
+                Tournament.TournamentType.LEAGUE, LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 17),
                 youthLeague, 8, LocalDate.of(2026, 7, 1), 20.0, "Riverside Park Field");
 
+
         log.info("Database seeding completed successfully!");
-        log.info("Created {} leagues, {} teams, {} players, {} fields, {} seasons, {} tournaments",
+        log.info("Created {} leagues, {} teams, {} players, {} fields, {} seasons, {} tournaments, {} games",
                 leagueService.findAll().size(),
                 teamService.findAll().size(),
                 playerService.findAll().size(),
                 fieldService.findAll().size(),
                 seasonService.findAll().size(),
-                tournamentService.findAll().size());
+                tournamentService.findAll().size(),
+                gameService.findAll().size());
     }
 
     private Team createTeam(String name, String coach, String email, League league) {
@@ -224,21 +321,86 @@ public class DataSeeder implements CommandLineRunner {
         tournamentService.save(tournament);
     }
 
-    private void createField(String name, String location, String address) {
+    private Field createField(String name, String location, String address) {
         Field field = new Field();
         field.setName(name);
         field.setLocation(location);
         field.setAddress(address);
-        fieldService.save(field);
+        return fieldService.save(field);
     }
 
-    private void createSeason(String name, LocalDate startDate, LocalDate endDate, League league) {
+    private Season createSeason(String name, LocalDate startDate, LocalDate endDate, League league) {
         Season season = new Season();
         season.setName(name);
         season.setStartDate(startDate);
         season.setEndDate(endDate);
         season.setLeague(league);
-        seasonService.save(season);
+        return seasonService.save(season);
+    }
+
+    /**
+     * Create a round-robin schedule of games for a season
+     */
+    private void createGamesForSeason(Season season, List<Team> teams, List<Field> fields,
+                                     LocalTime gameTime, boolean includePastGames) {
+        LocalDate currentDate = LocalDate.now();
+        LocalDate startDate = season.getStartDate();
+        int teamCount = teams.size();
+        int fieldIndex = 0;
+
+        // Generate round-robin schedule (each team plays each other once)
+        for (int week = 0; week < teamCount - 1; week++) {
+            LocalDate gameDate = startDate.plusWeeks(week);
+
+            // Determine game status based on date
+            Game.GameStatus status;
+            if (gameDate.isBefore(currentDate)) {
+                if (!includePastGames) continue;
+                status = Game.GameStatus.COMPLETED;
+            } else if (gameDate.isEqual(currentDate)) {
+                status = Game.GameStatus.IN_PROGRESS;
+            } else {
+                status = Game.GameStatus.SCHEDULED;
+            }
+
+            // Create matchups for this week
+            for (int match = 0; match < teamCount / 2; match++) {
+                int home = (week + match) % (teamCount - 1);
+                int away = (teamCount - 1 - match + week) % (teamCount - 1);
+
+                // Last team stays in place, others rotate
+                if (match == 0) {
+                    away = teamCount - 1;
+                }
+
+                Team homeTeam = teams.get(home);
+                Team awayTeam = teams.get(away);
+                Field field = fields.get(fieldIndex % fields.size());
+                fieldIndex++;
+
+                // Create game at the specified time
+                LocalDateTime gameDateTime = LocalDateTime.of(gameDate, gameTime.plusHours(match * 2));
+
+                Game game = new Game();
+                game.setGameDate(gameDateTime);
+                game.setHomeTeam(homeTeam);
+                game.setAwayTeam(awayTeam);
+                game.setField(field);
+                game.setSeason(season);
+                game.setStatus(status);
+
+                // Add scores for completed games
+                if (status == Game.GameStatus.COMPLETED) {
+                    game.setHomeScore((int) (Math.random() * 5));
+                    game.setAwayScore((int) (Math.random() * 5));
+                } else if (status == Game.GameStatus.IN_PROGRESS) {
+                    game.setHomeScore((int) (Math.random() * 3));
+                    game.setAwayScore((int) (Math.random() * 3));
+                }
+
+                gameService.save(game);
+            }
+        }
     }
 }
 

@@ -87,6 +87,9 @@ public class ScheduleGeneratorResultView {
 
         roundsTable.getColumns().addAll(roundCol, matchesCol, detailsCol);
 
+        // Setup column width persistence for generator view
+        TablePreferencesUtil.setupTableColumnPersistence(roundsTable, "schedule.rounds.table");
+
         Label infoLabel = new Label("Click 'Generate Schedule' to create a round-robin schedule for this season.");
         infoLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d; -fx-padding: 10;");
         infoLabel.setWrapText(true);
@@ -144,4 +147,3 @@ public class ScheduleGeneratorResultView {
         a.showAndWait();
     }
 }
-

@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "seasons")
+@Table(name = "seasons", uniqueConstraints = {
+    @UniqueConstraint(columnNames = "name", name = "uk_season_name")
+})
 public class Season {
     
     @Id
@@ -18,7 +20,7 @@ public class Season {
     private Long id;
     
     @NotBlank
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
     
     @NotNull

@@ -63,10 +63,6 @@ class TeamViewTest {
         verifyThat("Refresh", hasText("Refresh"));
     }
 
-    @Test
-    void shouldDisplayDeleteSelectedButton() {
-        verifyThat("Delete Selected", hasText("Delete Selected"));
-    }
 
     @Test
     void shouldDisplayClearFilterButton() {

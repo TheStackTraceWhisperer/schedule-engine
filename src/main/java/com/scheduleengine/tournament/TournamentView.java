@@ -8,6 +8,7 @@ import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.team.domain.Team;
 import com.scheduleengine.team.service.TeamService;
+import com.scheduleengine.common.TablePreferencesUtil;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,6 +31,7 @@ public class TournamentView {
     private ObservableList<Tournament> data;
     private ComboBox<Tournament.TournamentType> typeFilter;
     private TournamentBracketEditorView bracketEditorView;
+    private com.scheduleengine.navigation.NavigationHandler navigationHandler;
 
     public TournamentView(TournamentService tournamentService, TournamentRegistrationService registrationService,
                          LeagueService leagueService, TeamService teamService) {
@@ -39,6 +41,10 @@ public class TournamentView {
         this.teamService = teamService;
         this.data = FXCollections.observableArrayList();
         this.bracketEditorView = new TournamentBracketEditorView(tournamentService, registrationService);
+    }
+
+    public void setNavigationHandler(com.scheduleengine.navigation.NavigationHandler navigationHandler) {
+        this.navigationHandler = navigationHandler;
     }
 
     public VBox getView() {
@@ -66,11 +72,7 @@ public class TournamentView {
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
 
-        Button deleteSelected = new Button("Delete Selected");
-        deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-        deleteSelected.setOnAction(e -> deleteSelected());
-
-        topBox.getChildren().addAll(title, spacer, new Label("Type:"), typeFilter, clearFilter, refreshButton, addButton, deleteSelected);
+        topBox.getChildren().addAll(title, spacer, new Label("Type:"), typeFilter, clearFilter, refreshButton, addButton);
 
         table = new TableView<>();
         table.setItems(data);
@@ -119,35 +121,38 @@ public class TournamentView {
         teamsCol.setPrefWidth(80);
 
         TableColumn<Tournament, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(300);
+        actionCol.setPrefWidth(280);
         actionCol.setCellFactory(col -> new TableCell<>() {
-            private final Button editBtn = new Button("Edit");
+            private final Button viewBtn = new Button("View Details");
             private final Button bracketBtn = new Button("Bracket");
             private final Button registerBtn = new Button("Register");
-            private final Button deleteBtn = new Button("Delete");
             {
-                editBtn.setOnAction(e -> showEditDialog(getTableView().getItems().get(getIndex())));
+                viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
+                viewBtn.setOnAction(e -> {
+                    Tournament t = getTableView().getItems().get(getIndex());
+                    if (navigationHandler != null) {
+                        com.scheduleengine.navigation.NavigationContext ctx = new com.scheduleengine.navigation.NavigationContext()
+                                .navigateTo("tournaments", "Tournaments")
+                                .navigateTo("tournament-detail", t.getName(), t);
+                        navigationHandler.navigate(ctx);
+                    }
+                });
                 bracketBtn.setOnAction(e -> openBracketEditor(getTableView().getItems().get(getIndex())));
                 bracketBtn.setStyle("-fx-background-color: #ffa502; -fx-text-fill: white;");
                 registerBtn.setOnAction(e -> showRegisterDialog(getTableView().getItems().get(getIndex())));
                 registerBtn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white;");
-                deleteBtn.setOnAction(e -> deleteTournament(getTableView().getItems().get(getIndex())));
-
-                deleteBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
             }
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox box = new HBox(6, editBtn, bracketBtn, registerBtn, deleteBtn);
-                    setGraphic(box);
-                }
+                setGraphic(empty ? null : new HBox(6, viewBtn, bracketBtn, registerBtn));
             }
         });
 
         table.getColumns().addAll(idCol, nameCol, typeCol, startCol, endCol, leagueCol, statusCol, teamsCol, actionCol);
+
+        // Setup column width persistence (unique table id)
+        TablePreferencesUtil.setupTableColumnPersistence(table, "tournament.table");
 
         loadData();
 
@@ -398,25 +403,6 @@ public class TournamentView {
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 tournamentService.deleteById(tournament.getId());
-                loadData();
-            }
-        });
-    }
-
-    private void deleteSelected() {
-        var selected = table.getSelectionModel().getSelectedItems();
-        if (selected == null || selected.isEmpty()) {
-            showError("Delete Tournaments", "Select one or more tournaments to delete.");
-            return;
-        }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Tournaments");
-        alert.setHeaderText("Delete " + selected.size() + " tournaments?");
-        alert.setContentText("This will remove the selected tournaments.");
-        alert.showAndWait().ifPresent(resp -> {
-            if (resp == ButtonType.OK) {
-                var toDelete = FXCollections.observableArrayList(selected);
-                toDelete.forEach(t -> tournamentService.deleteById(t.getId()));
                 loadData();
             }
         });

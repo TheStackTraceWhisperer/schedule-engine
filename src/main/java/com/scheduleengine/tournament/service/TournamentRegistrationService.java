@@ -62,9 +62,9 @@ public class TournamentRegistrationService {
         registration.setRegistrationDate(LocalDateTime.now());
         registration.setNotes(notes);
 
-        // Auto-approve for open and league-scoped tournaments
+        // Auto-approve for open and league tournaments
         if (tournament.getType() == Tournament.TournamentType.OPEN ||
-            tournament.getType() == Tournament.TournamentType.LEAGUE_SCOPED) {
+            tournament.getType() == Tournament.TournamentType.LEAGUE) {
             registration.setStatus(TournamentRegistration.RegistrationStatus.APPROVED);
         } else {
             // Invitational requires approval
@@ -87,4 +87,3 @@ public class TournamentRegistrationService {
         registrationRepository.deleteById(id);
     }
 }
-

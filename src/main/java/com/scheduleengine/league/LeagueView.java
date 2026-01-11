@@ -2,6 +2,9 @@ package com.scheduleengine.league;
 
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
+import com.scheduleengine.navigation.NavigationHandler;
+import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.TablePreferencesUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -15,12 +18,20 @@ public class LeagueView {
     private final LeagueService leagueService;
     private TableView<League> table;
     private ObservableList<League> data;
-    
+    private NavigationHandler navigationHandler;
+
     public LeagueView(LeagueService leagueService) {
         this.leagueService = leagueService;
         this.data = FXCollections.observableArrayList();
     }
     
+    /**
+     * Set the navigation handler for drill-down navigation
+     */
+    public void setNavigationHandler(NavigationHandler navigationHandler) {
+        this.navigationHandler = navigationHandler;
+    }
+
     public VBox getView() {
         VBox vbox = new VBox(10);
         vbox.setPadding(new Insets(10));
@@ -39,12 +50,8 @@ public class LeagueView {
         
         Button refreshButton = new Button("Refresh");
         refreshButton.setOnAction(e -> loadData());
-        
-        Button deleteSelected = new Button("Delete Selected");
-        deleteSelected.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-        deleteSelected.setOnAction(e -> deleteSelected());
 
-        topBox.getChildren().addAll(title, spacer, refreshButton, addButton, deleteSelected);
+        topBox.getChildren().addAll(title, spacer, refreshButton, addButton);
 
         // Table
         table = new TableView<>();
@@ -64,30 +71,31 @@ public class LeagueView {
         descCol.setPrefWidth(400);
         
         TableColumn<League, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(150);
+        actionCol.setPrefWidth(140);
         actionCol.setCellFactory(param -> new TableCell<>() {
-            private final Button editBtn = new Button("Edit");
-            private final Button deleteBtn = new Button("Delete");
-            
+            private final Button viewBtn = new Button("View Details");
+
             {
-                editBtn.setOnAction(e -> {
+                viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
+                viewBtn.setOnAction(e -> {
                     League league = getTableView().getItems().get(getIndex());
-                    showEditDialog(league);
+                    if (navigationHandler != null) {
+                        com.scheduleengine.navigation.NavigationContext newContext =
+                            new com.scheduleengine.navigation.NavigationContext()
+                                .navigateTo("leagues", "Leagues")
+                                .navigateTo("league-detail", league.getName(), league);
+                        navigationHandler.navigate(newContext);
+                    }
                 });
-                deleteBtn.setOnAction(e -> {
-                    League league = getTableView().getItems().get(getIndex());
-                    deleteLeague(league);
-                });
-                deleteBtn.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
             }
-            
+
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    HBox buttons = new HBox(5, editBtn, deleteBtn);
+                    HBox buttons = new HBox(5, viewBtn);
                     setGraphic(buttons);
                 }
             }
@@ -95,6 +103,9 @@ public class LeagueView {
         
         table.getColumns().addAll(idCol, nameCol, descCol, actionCol);
         
+        // Setup column width persistence
+        TablePreferencesUtil.setupTableColumnPersistence(table, "league.table");
+
         loadData();
         
         vbox.getChildren().addAll(topBox, table);
@@ -125,10 +136,21 @@ public class LeagueView {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
         
+        // Configure columns: label column fixed, field column grows
+        ColumnConstraints labelCol = new ColumnConstraints();
+        labelCol.setMinWidth(Region.USE_PREF_SIZE);
+        ColumnConstraints fieldCol = new ColumnConstraints();
+        fieldCol.setHgrow(Priority.ALWAYS);
+        fieldCol.setMinWidth(350);
+        grid.getColumnConstraints().addAll(labelCol, fieldCol);
+
         TextField nameField = new TextField();
+        nameField.setMaxWidth(Double.MAX_VALUE);
         TextArea descField = new TextArea();
         descField.setPrefRowCount(3);
-        
+        descField.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setVgrow(descField, Priority.ALWAYS);
+
         grid.add(new Label("Name:"), 0, 0);
         grid.add(nameField, 1, 0);
         grid.add(new Label("Description:"), 0, 1);
@@ -136,6 +158,10 @@ public class LeagueView {
         
         dialog.getDialogPane().setContent(grid);
         
+        // Make dialog resizable and persist size
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
+            DialogUtil.makeResizable(dialog, "league.add", 550, 400));
+
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
                 League league = new League();
@@ -152,45 +178,7 @@ public class LeagueView {
         });
     }
     
-    private void showEditDialog(League league) {
-        Dialog<League> dialog = new Dialog<>();
-        dialog.setTitle("Edit League");
-        dialog.setHeaderText("Edit league information");
-        
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-        
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 150, 10, 10));
-        
-        TextField nameField = new TextField(league.getName());
-        TextArea descField = new TextArea(league.getDescription());
-        descField.setPrefRowCount(3);
-        
-        grid.add(new Label("Name:"), 0, 0);
-        grid.add(nameField, 1, 0);
-        grid.add(new Label("Description:"), 0, 1);
-        grid.add(descField, 1, 1);
-        
-        dialog.getDialogPane().setContent(grid);
-        
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                league.setName(nameField.getText());
-                league.setDescription(descField.getText());
-                return league;
-            }
-            return null;
-        });
-        
-        dialog.showAndWait().ifPresent(updatedLeague -> {
-            leagueService.update(league.getId(), updatedLeague);
-            loadData();
-        });
-    }
-    
+
     private void deleteLeague(League league) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Delete League");
@@ -200,25 +188,6 @@ public class LeagueView {
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 leagueService.deleteById(league.getId());
-                loadData();
-            }
-        });
-    }
-
-    private void deleteSelected() {
-        var selected = table.getSelectionModel().getSelectedItems();
-        if (selected == null || selected.isEmpty()) {
-            showError("Delete Leagues", "Select one or more leagues to delete.");
-            return;
-        }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Leagues");
-        alert.setHeaderText("Delete " + selected.size() + " leagues?");
-        alert.setContentText("This will remove the selected leagues.");
-        alert.showAndWait().ifPresent(resp -> {
-            if (resp == ButtonType.OK) {
-                var toDelete = FXCollections.observableArrayList(selected);
-                toDelete.forEach(l -> leagueService.deleteById(l.getId()));
                 loadData();
             }
         });
