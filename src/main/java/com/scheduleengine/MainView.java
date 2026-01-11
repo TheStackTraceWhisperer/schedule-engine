@@ -10,6 +10,8 @@ import com.scheduleengine.team.service.TeamService;
 import com.scheduleengine.team.TeamView;
 import com.scheduleengine.field.service.FieldService;
 import com.scheduleengine.field.FieldView;
+import com.scheduleengine.field.service.FieldAvailabilityService;
+import com.scheduleengine.field.service.FieldUsageBlockService;
 import com.scheduleengine.season.domain.Season;
 import com.scheduleengine.season.service.SeasonService;
 import com.scheduleengine.season.SeasonView;
@@ -41,6 +43,8 @@ public class MainView {
     private final LeagueService leagueService;
     private final TeamService teamService;
     private final FieldService fieldService;
+    private final FieldAvailabilityService fieldAvailabilityService;
+    private final FieldUsageBlockService fieldUsageBlockService;
     private final SeasonService seasonService;
     private final GameService gameService;
     private final ScheduleGeneratorService scheduleGeneratorService;
@@ -67,7 +71,9 @@ public class MainView {
                    FieldService fieldService, SeasonService seasonService,
                    GameService gameService, ScheduleGeneratorService scheduleGeneratorService,
                    PlayerService playerService, TournamentService tournamentService,
-                   TournamentRegistrationService tournamentRegistrationService) {
+                   TournamentRegistrationService tournamentRegistrationService,
+                   FieldAvailabilityService fieldAvailabilityService,
+                   FieldUsageBlockService fieldUsageBlockService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
@@ -77,6 +83,8 @@ public class MainView {
         this.playerService = playerService;
         this.tournamentService = tournamentService;
         this.tournamentRegistrationService = tournamentRegistrationService;
+        this.fieldAvailabilityService = fieldAvailabilityService;
+        this.fieldUsageBlockService = fieldUsageBlockService;
     }
     
     private StackPane contentArea;
@@ -110,7 +118,7 @@ public class MainView {
         teamView = new TeamView(teamService, leagueService);
         teamView.setNavigationHandler(this::navigate);
         teamDetailView = new com.scheduleengine.team.TeamDetailView(teamService, leagueService, this::navigate);
-        fieldView = new FieldView(fieldService);
+        fieldView = new FieldView(fieldService, fieldAvailabilityService, fieldUsageBlockService);
         gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
         gameView.setNavigationHandler(this::navigate);
         seasonView = new SeasonView(seasonService, leagueService, scheduleGeneratorService, gameView, gameService);
@@ -445,8 +453,8 @@ public class MainView {
                 contentArea.getChildren().add(rosterView.getView());
                 break;
             case "fields":
-                fieldView.refresh();
                 contentArea.getChildren().add(fieldView.getView());
+                fieldView.refresh();
                 break;
             case "player-detail":
                 com.scheduleengine.player.domain.Player player = context.getContextData("player-detail", com.scheduleengine.player.domain.Player.class);

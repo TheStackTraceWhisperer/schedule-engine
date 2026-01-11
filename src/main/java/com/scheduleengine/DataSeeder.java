@@ -14,11 +14,16 @@ import com.scheduleengine.team.service.TeamService;
 import com.scheduleengine.player.service.PlayerService;
 import com.scheduleengine.tournament.service.TournamentService;
 import com.scheduleengine.game.service.GameService;
+import com.scheduleengine.field.domain.FieldAvailability;
+import com.scheduleengine.field.domain.FieldUsageBlock;
+import com.scheduleengine.field.service.FieldAvailabilityService;
+import com.scheduleengine.field.service.FieldUsageBlockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -36,10 +41,13 @@ public class DataSeeder implements CommandLineRunner {
     private final PlayerService playerService;
     private final TournamentService tournamentService;
     private final GameService gameService;
+    private final FieldAvailabilityService fieldAvailabilityService;
+    private final FieldUsageBlockService fieldUsageBlockService;
 
     public DataSeeder(LeagueService leagueService, TeamService teamService,
                      FieldService fieldService, SeasonService seasonService, PlayerService playerService,
-                     TournamentService tournamentService, GameService gameService) {
+                     TournamentService tournamentService, GameService gameService,
+                     FieldAvailabilityService fieldAvailabilityService, FieldUsageBlockService fieldUsageBlockService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
@@ -47,6 +55,8 @@ public class DataSeeder implements CommandLineRunner {
         this.playerService = playerService;
         this.tournamentService = tournamentService;
         this.gameService = gameService;
+        this.fieldAvailabilityService = fieldAvailabilityService;
+        this.fieldUsageBlockService = fieldUsageBlockService;
     }
 
     @Override
@@ -101,6 +111,19 @@ public class DataSeeder implements CommandLineRunner {
         Field northComplex = createField("North Sports Complex", "North End", "789 North Avenue, North End");
         Field communityCourt = createField("Community Center Court", "Westside", "321 West Boulevard, Westside");
         Field centralArena = createField("Central Arena", "Downtown", "555 Central Plaza, City Center");
+
+        // Seed hours of operation (availability) and dedicated blocks
+        seedFieldHours(memorialStadium, 9, 21);
+        seedFieldHours(riversidePark, 8, 20);
+        seedFieldHours(northComplex, 8, 22);
+        seedIndoorHours(communityCourt, 10, 22);
+        seedIndoorHours(centralArena, 10, 23);
+
+        seedLeagueBlocksWeekdays(memorialStadium, 18, 21);
+        seedLeagueBlocksWeekdays(riversidePark, 17, 20);
+        seedLeagueBlocksWeekdays(northComplex, 18, 21);
+        seedPracticeBlocksWeekdays(communityCourt, 18, 20);
+        seedTournamentBlocksWeekends(centralArena, 9, 18);
 
         // Create Rosters (same teams over the years)
         createSoccerRoster(thunderUnited);
@@ -402,5 +425,50 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
     }
-}
 
+    private void seedFieldHours(Field field, int openHour, int closeHour) {
+        // Mon-Fri: openHour-closeHour, Sat: openHour- (closeHour-2), Sun: closed
+        for (DayOfWeek day : DayOfWeek.values()) {
+            switch (day) {
+                case MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY ->
+                    fieldAvailabilityService.save(new FieldAvailability(field, day,
+                        LocalTime.of(openHour, 0), LocalTime.of(closeHour, 0)));
+                case SATURDAY ->
+                    fieldAvailabilityService.save(new FieldAvailability(field, day,
+                        LocalTime.of(openHour, 0), LocalTime.of(Math.max(openHour, closeHour - 2), 0)));
+                case SUNDAY -> { /* closed */ }
+            }
+        }
+    }
+
+    private void seedIndoorHours(Field field, int openHour, int closeHour) {
+        // Indoor: open all days with slightly shorter Sunday
+        for (DayOfWeek day : DayOfWeek.values()) {
+            int sundayClose = Math.max(openHour + 6, closeHour - 2);
+            int effectiveClose = day == DayOfWeek.SUNDAY ? sundayClose : closeHour;
+            fieldAvailabilityService.save(new FieldAvailability(field, day,
+                LocalTime.of(openHour, 0), LocalTime.of(effectiveClose, 0)));
+        }
+    }
+
+    private void seedLeagueBlocksWeekdays(Field field, int startHour, int endHour) {
+        for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY}) {
+            fieldUsageBlockService.save(new FieldUsageBlock(field, day, FieldUsageBlock.UsageType.LEAGUE,
+                LocalTime.of(startHour, 0), LocalTime.of(endHour, 0), "League play"));
+        }
+    }
+
+    private void seedPracticeBlocksWeekdays(Field field, int startHour, int endHour) {
+        for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY}) {
+            fieldUsageBlockService.save(new FieldUsageBlock(field, day, FieldUsageBlock.UsageType.PRACTICE,
+                LocalTime.of(startHour, 0), LocalTime.of(endHour, 0), "Team practices"));
+        }
+    }
+
+    private void seedTournamentBlocksWeekends(Field field, int startHour, int endHour) {
+        for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.SATURDAY, DayOfWeek.SUNDAY}) {
+            fieldUsageBlockService.save(new FieldUsageBlock(field, day, FieldUsageBlock.UsageType.TOURNAMENT,
+                LocalTime.of(startHour, 0), LocalTime.of(endHour, 0), "Tournament play"));
+        }
+    }
+}
