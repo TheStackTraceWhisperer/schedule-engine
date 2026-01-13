@@ -8,6 +8,9 @@ import com.scheduleengine.navigation.NavigationContext;
 import com.scheduleengine.navigation.NavigationHandler;
 import com.scheduleengine.common.DialogUtil;
 import com.scheduleengine.league.domain.League;
+import com.scheduleengine.common.service.ScheduleGeneratorService;
+import com.scheduleengine.common.ScheduleGeneratorResultView;
+import com.scheduleengine.game.service.GameService;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -25,11 +28,18 @@ public class SeasonDetailView {
     private final SeasonService seasonService;
     private final LeagueService leagueService;
     private final NavigationHandler navigationHandler;
+    private final ScheduleGeneratorService scheduleService;
+    private final GameService gameService;
+    private final ScheduleGeneratorResultView scheduleGeneratorResultView;
 
-    public SeasonDetailView(SeasonService seasonService, LeagueService leagueService, NavigationHandler navigationHandler) {
+    public SeasonDetailView(SeasonService seasonService, LeagueService leagueService, NavigationHandler navigationHandler,
+                           ScheduleGeneratorService scheduleService, GameService gameService) {
         this.seasonService = seasonService;
         this.leagueService = leagueService;
         this.navigationHandler = navigationHandler;
+        this.scheduleService = scheduleService;
+        this.gameService = gameService;
+        this.scheduleGeneratorResultView = new ScheduleGeneratorResultView(scheduleService, gameService);
     }
 
     public VBox getView(Season season, NavigationContext currentContext) {
@@ -132,6 +142,17 @@ public class SeasonDetailView {
         GridPane.setHgrow(standingsCard, Priority.ALWAYS);
         GridPane.setFillWidth(standingsCard, true);
 
+        // Generate Schedule card
+        DrillDownCard generateCard = new DrillDownCard(
+            "Generate Schedule",
+            "Create game schedule for this season",
+            FontAwesomeIcon.CALENDAR,
+            () -> openScheduleGenerator(season, currentContext)
+        );
+        generateCard.setStyle(generateCard.getStyle() + " -fx-border-color: #43e97b;");
+        GridPane.setHgrow(generateCard, Priority.ALWAYS);
+        GridPane.setFillWidth(generateCard, true);
+
         // Delete season card
         DrillDownCard deleteCard = new DrillDownCard(
             "Delete Season",
@@ -147,7 +168,8 @@ public class SeasonDetailView {
         cardsGrid.add(teamsCard, 1, 0);
         cardsGrid.add(editCard, 0, 1);
         cardsGrid.add(standingsCard, 1, 1);
-        cardsGrid.add(deleteCard, 0, 2);
+        cardsGrid.add(generateCard, 0, 2);
+        cardsGrid.add(deleteCard, 1, 2);
 
         // Configure grid columns to be equal width
         ColumnConstraints col1 = new ColumnConstraints();
@@ -242,6 +264,32 @@ public class SeasonDetailView {
                 .navigateTo("season-detail", refreshedSeason.getName(), refreshedSeason);
             navigationHandler.navigate(newContext);
         });
+    }
+
+    private void openScheduleGenerator(Season season, NavigationContext currentContext) {
+        // Create a dialog with the schedule generator view
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Schedule Generator - " + season.getName());
+        dialog.setWidth(1000);
+        dialog.setHeight(700);
+
+        VBox generatorView = scheduleGeneratorResultView.getView(season);
+        dialog.getDialogPane().setContent(generatorView);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+
+        // Make dialog resizable
+        dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
+            DialogUtil.makeResizable(dialog, "season.schedule.generator", 1000, 700));
+
+        dialog.showAndWait();
+
+        // Refresh the view after schedule generation
+        Season refreshedSeason = seasonService.findById(season.getId())
+            .orElse(season);
+        NavigationContext newContext = new NavigationContext()
+            .navigateTo("seasons", "Seasons")
+            .navigateTo("season-detail", refreshedSeason.getName(), refreshedSeason);
+        navigationHandler.navigate(newContext);
     }
 
     private void deleteSeason(Season season, NavigationContext currentContext) {

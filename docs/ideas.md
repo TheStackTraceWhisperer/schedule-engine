@@ -6,16 +6,6 @@ Ideas in development that need further refinement before implementation. Items c
 
 ## Implementation Priority Matrix
 
-| Feature             | Priority | Effort | Dependencies    | Status      |
-|---------------------|----------|--------|-----------------|-------------|
-| Referee Management  | Medium   | Large  | User roles      | Backlog     |
-| Liability Waivers   | High     | Medium | E-sig           | Backlog     |
-| Online Registration | High     | Medium | Payments        | Backlog     |
-| Payment Agreements  | High     | Medium | Payments        | Backlog     |
-| Due Reports         | High     | Medium | Payments        | Backlog     |
-| Invoices            | High     | Medium | Email, Payments | Backlog     |
-| Camps               | Low      | Large  | Events          | Future      |
-| Classes             | Medium   | Medium | Events          | Future      |
 
 | Feature             | Priority | Effort | Dependencies    | Status      |
 |---------------------|----------|--------|-----------------|-------------|
@@ -30,6 +20,7 @@ Ideas in development that need further refinement before implementation. Items c
 | Website Integration | Low      | Medium | Web hosting     | Future      |
 | On-Call System      | Low      | Medium | Notifications   | Future      |
 | Player Statistics   | Medium   | Large  | Game data       | Backlog     |
+
 
 ---
 
@@ -363,6 +354,100 @@ Ideas in development that need further refinement before implementation. Items c
   - Player awards
 - **Priority**: Medium (player engagement)
 - **Dependencies**: Game data, Player roster, Scoring system
+- **Estimated Effort**: Large (3-4 weeks)
+
+---
+
+## Front of House (User-Facing Features)
+
+### Summary
+
+| Feature             | Priority | Effort | Dependencies    | Status      |
+|---------------------|----------|--------|-----------------|-------------|
+| Online Registration | High     | Medium | Payments        | Backlog     |
+| Liability Waivers   | High     | Medium | E-sig           | Backlog     |
+| Payment Agreements  | High     | Medium | Payments        | Backlog     |
+| Classes             | Medium   | Medium | Events          | Future      |
+| Camps               | Low      | Large  | Events          | Future      |
+
+---
+
+### Detailed Feature Descriptions
+
+#### Online Registration
+- **Description**: Allow teams, players, and coaches to register online instead of manual entry
+- **Use Cases**:
+  - New teams join a league mid-season
+  - Individual players register for specific seasons
+  - Coaches self-register and manage their team
+- **Features**:
+  - Registration forms with validation
+  - Email confirmation workflow
+  - Payment integration before approval
+  - Registration deadlines per season/event
+- **Priority**: High (improves user experience)
+- **Dependencies**: Payment system, Email system
+- **Estimated Effort**: Medium (2-3 weeks)
+
+#### Liability Waivers
+- **Description**: Digital liability waiver collection and tracking
+- **Use Cases**:
+  - New players must sign waiver before playing
+  - Annual waiver renewal requirements
+  - Waiver compliance reports
+- **Features**:
+  - PDF waiver generation and signing
+  - E-signature integration
+  - Expiration date tracking
+  - Signed waiver archival
+- **Priority**: High (legal requirement)
+- **Dependencies**: E-signature provider (DocuSign, HelloSign)
+- **Estimated Effort**: Medium (2 weeks)
+
+#### Payment Agreements
+- **Description**: Define and track payment terms and agreements
+- **Use Cases**:
+  - League entry fees
+  - Team registration fees
+  - Payment plans and installments
+- **Features**:
+  - Payment term templates
+  - Agreement acceptance tracking
+  - Automatic payment scheduling
+  - Payment status monitoring
+- **Priority**: High (revenue tracking)
+- **Dependencies**: Payment system
+- **Estimated Effort**: Medium (2-3 weeks)
+
+#### Classes
+- **Description**: Manage skill-building or training classes separate from regular games
+- **Use Cases**:
+  - Coaching clinics
+  - Skill development sessions
+  - Referee training courses
+- **Features**:
+  - Class scheduling and roster management
+  - Class attendance tracking
+  - Instructor assignment
+  - Class capacity limits
+- **Priority**: Medium (future feature)
+- **Dependencies**: Scheduling, User roles
+- **Estimated Effort**: Medium (2-3 weeks)
+
+#### Camps
+- **Description**: Multi-day or multi-week sports camps and tournaments
+- **Use Cases**:
+  - Summer soccer camps
+  - Basketball clinics
+  - Skills development camps
+- **Features**:
+  - Camp creation with multi-day schedules
+  - Team/group assignments
+  - Accommodation tracking (if residential)
+  - Camp fee management
+  - Participant attendance tracking
+- **Priority**: Low (seasonal/optional)
+- **Dependencies**: Events system, Registration, Payments
 - **Estimated Effort**: Large (3-4 weeks)
 
 ---

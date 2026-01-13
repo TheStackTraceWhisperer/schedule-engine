@@ -67,15 +67,8 @@ public class SeasonView {
         Button addButton = new Button("Add Season");
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
-        
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(e -> loadData());
-        
-        Button genButton = new Button("Generate Schedule");
-        genButton.setStyle("-fx-background-color: #43e97b; -fx-text-fill: white;");
-        genButton.setOnAction(e -> openScheduleGenerator());
 
-        topBox.getChildren().addAll(title, spacer, genButton, refreshButton, addButton);
+        topBox.getChildren().addAll(title, spacer, addButton);
 
         table = new TableView<>();
         table.setItems(data);
@@ -84,6 +77,7 @@ public class SeasonView {
         TableColumn<Season, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(60);
+        idCol.setVisible(false);
 
         TableColumn<Season, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -277,31 +271,6 @@ public class SeasonView {
         a.showAndWait();
     }
 
-    private void openScheduleGenerator() {
-        Season selected = table.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            showError("Generate Schedule", "Please select a season first");
-            return;
-        }
-
-        // Create a dialog with the schedule generator view
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Schedule Generator - " + selected.getName());
-        dialog.setWidth(1000);
-        dialog.setHeight(700);
-
-        VBox generatorView = scheduleGeneratorResultView.getView(selected);
-        dialog.getDialogPane().setContent(generatorView);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-
-        dialog.showAndWait();
-        gameView.refresh();
-        loadData();
-    }
-
-    private void onGenerateSchedule(boolean overwrite) {
-        // Legacy method - kept for backward compatibility
-    }
 
     /**
      * Generate a season name based on league name and current date.

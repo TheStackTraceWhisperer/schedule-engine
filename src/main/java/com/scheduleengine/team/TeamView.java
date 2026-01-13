@@ -78,10 +78,7 @@ public class TeamView {
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
 
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(e -> loadData());
-
-        topBox.getChildren().addAll(title, spacer, new Label("League:"), leagueFilter, clearFilter, refreshButton, addButton);
+        topBox.getChildren().addAll(title, spacer, new Label("League:"), leagueFilter, clearFilter, addButton);
 
         table = new TableView<>();
         table.setItems(data);
@@ -90,6 +87,7 @@ public class TeamView {
         TableColumn<Team, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(60);
+        idCol.setVisible(false);
 
         TableColumn<Team, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -99,9 +97,6 @@ public class TeamView {
         coachCol.setCellValueFactory(new PropertyValueFactory<>("coach"));
         coachCol.setPrefWidth(140);
 
-        TableColumn<Team, String> emailCol = new TableColumn<>("Email");
-        emailCol.setCellValueFactory(new PropertyValueFactory<>("contactEmail"));
-        emailCol.setPrefWidth(220);
 
         TableColumn<Team, String> leagueCol = new TableColumn<>("League");
         leagueCol.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
@@ -138,7 +133,7 @@ public class TeamView {
             }
         });
 
-        table.getColumns().addAll(idCol, nameCol, coachCol, emailCol, leagueCol, actionCol);
+        table.getColumns().addAll(idCol, nameCol, coachCol, leagueCol, actionCol);
 
         // Setup column width persistence
         TablePreferencesUtil.setupTableColumnPersistence(table, "team.table");

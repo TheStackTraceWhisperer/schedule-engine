@@ -69,18 +69,16 @@ public class TournamentView {
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
 
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(e -> loadData());
-
-        topBox.getChildren().addAll(title, spacer, new Label("Type:"), typeFilter, clearFilter, refreshButton, addButton);
+        topBox.getChildren().addAll(title, spacer, new Label("Type:"), typeFilter, clearFilter, addButton);
 
         table = new TableView<>();
         table.setItems(data);
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         TableColumn<Tournament, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(50);
+        idCol.setVisible(false);
 
         TableColumn<Tournament, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -430,4 +428,5 @@ public class TournamentView {
         loadData();
     }
 }
+
 

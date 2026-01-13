@@ -149,8 +149,15 @@ public class BreadcrumbBar extends HBox {
         );
 
         homeBtn.setOnAction(e -> {
-            NavigationContext newContext = new NavigationContext();
-            navigationHandler.navigate(newContext);
+            // Navigate to the root of the current section (first breadcrumb item)
+            if (currentContext != null && !currentContext.getBreadcrumb().isEmpty()) {
+                NavigationContext newContext = currentContext.navigateToLevel(0);
+                navigationHandler.navigate(newContext);
+            } else {
+                // Fallback: navigate to leagues view
+                NavigationContext newContext = new NavigationContext().navigateTo("leagues", "Leagues");
+                navigationHandler.navigate(newContext);
+            }
         });
 
         return homeBtn;

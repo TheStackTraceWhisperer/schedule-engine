@@ -2,6 +2,8 @@ package com.scheduleengine;
 
 import com.scheduleengine.common.service.ScheduleGeneratorService;
 import com.scheduleengine.field.service.FieldService;
+import com.scheduleengine.field.service.FieldAvailabilityService;
+import com.scheduleengine.field.service.FieldUsageBlockService;
 import com.scheduleengine.game.service.GameService;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.player.service.PlayerService;
@@ -34,6 +36,12 @@ class MainViewTest {
 
     @Mock
     private FieldService fieldService;
+
+    @Mock
+    private FieldAvailabilityService fieldAvailabilityService;
+
+    @Mock
+    private FieldUsageBlockService fieldUsageBlockService;
 
     @Mock
     private SeasonService seasonService;
@@ -76,7 +84,9 @@ class MainViewTest {
             scheduleGeneratorService,
             playerService,
             tournamentService,
-            tournamentRegistrationService
+            tournamentRegistrationService,
+            fieldAvailabilityService,
+            fieldUsageBlockService
         );
 
         mainView.start(stage);

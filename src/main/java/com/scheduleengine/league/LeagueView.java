@@ -47,11 +47,8 @@ public class LeagueView {
         Button addButton = new Button("Add League");
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
-        
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(e -> loadData());
 
-        topBox.getChildren().addAll(title, spacer, refreshButton, addButton);
+        topBox.getChildren().addAll(title, spacer, addButton);
 
         // Table
         table = new TableView<>();
@@ -61,7 +58,8 @@ public class LeagueView {
         TableColumn<League, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(60);
-        
+        idCol.setVisible(false);
+
         TableColumn<League, String> nameCol = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         nameCol.setPrefWidth(200);

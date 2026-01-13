@@ -76,10 +76,7 @@ public class RosterView {
             showAddDialog();
         });
 
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(e -> loadData());
-
-        topBox.getChildren().addAll(title, spacer, new Label("Team:"), teamFilter, refreshButton, addButton);
+        topBox.getChildren().addAll(title, spacer, new Label("Team:"), teamFilter, addButton);
 
         table = new TableView<>();
         table.setItems(data);
@@ -88,6 +85,7 @@ public class RosterView {
         TableColumn<Player, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(50);
+        idCol.setVisible(false);
 
         TableColumn<Player, String> firstNameCol = new TableColumn<>("First Name");
         firstNameCol.setCellValueFactory(new PropertyValueFactory<>("firstName"));

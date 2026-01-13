@@ -363,6 +363,7 @@ public class DataSeeder implements CommandLineRunner {
 
     /**
      * Create a round-robin schedule of games for a season
+     * Games are only scheduled on days/times when fields are actually available
      */
     private void createGamesForSeason(Season season, List<Team> teams, List<Field> fields,
                                      LocalTime gameTime, boolean includePastGames) {
@@ -374,6 +375,12 @@ public class DataSeeder implements CommandLineRunner {
         // Generate round-robin schedule (each team plays each other once)
         for (int week = 0; week < teamCount - 1; week++) {
             LocalDate gameDate = startDate.plusWeeks(week);
+
+            // Skip Sundays - fields are configured closed on Sunday
+            if (gameDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                week++;
+                gameDate = startDate.plusWeeks(week);
+            }
 
             // Determine game status based on date
             Game.GameStatus status;
@@ -442,12 +449,10 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedIndoorHours(Field field, int openHour, int closeHour) {
-        // Indoor: open all days with slightly shorter Sunday
+        // Indoor: open all days with same hours
         for (DayOfWeek day : DayOfWeek.values()) {
-            int sundayClose = Math.max(openHour + 6, closeHour - 2);
-            int effectiveClose = day == DayOfWeek.SUNDAY ? sundayClose : closeHour;
             fieldAvailabilityService.save(new FieldAvailability(field, day,
-                LocalTime.of(openHour, 0), LocalTime.of(effectiveClose, 0)));
+                LocalTime.of(openHour, 0), LocalTime.of(closeHour, 0)));
         }
     }
 
@@ -466,9 +471,8 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedTournamentBlocksWeekends(Field field, int startHour, int endHour) {
-        for (DayOfWeek day : new DayOfWeek[]{DayOfWeek.SATURDAY, DayOfWeek.SUNDAY}) {
-            fieldUsageBlockService.save(new FieldUsageBlock(field, day, FieldUsageBlock.UsageType.TOURNAMENT,
-                LocalTime.of(startHour, 0), LocalTime.of(endHour, 0), "Tournament play"));
-        }
+        // Only Saturday for tournament blocks - Sunday is left flexible by user
+        fieldUsageBlockService.save(new FieldUsageBlock(field, DayOfWeek.SATURDAY, FieldUsageBlock.UsageType.TOURNAMENT,
+            LocalTime.of(startHour, 0), LocalTime.of(endHour, 0), "Tournament play"));
     }
 }

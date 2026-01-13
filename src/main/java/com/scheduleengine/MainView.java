@@ -57,6 +57,7 @@ public class MainView {
     private TeamView teamView;
     private com.scheduleengine.team.TeamDetailView teamDetailView;
     private FieldView fieldView;
+    private com.scheduleengine.field.FieldDetailView fieldDetailView;
     private SeasonView seasonView;
     private com.scheduleengine.season.SeasonDetailView seasonDetailView;
     private GameView gameView;
@@ -118,12 +119,15 @@ public class MainView {
         teamView = new TeamView(teamService, leagueService);
         teamView.setNavigationHandler(this::navigate);
         teamDetailView = new com.scheduleengine.team.TeamDetailView(teamService, leagueService, this::navigate);
-        fieldView = new FieldView(fieldService, fieldAvailabilityService, fieldUsageBlockService);
+        fieldView = new FieldView(fieldService, fieldAvailabilityService, fieldUsageBlockService, gameService);
+        fieldView.setNavigationHandler(this::navigate);
+        fieldDetailView = new com.scheduleengine.field.FieldDetailView(fieldService, fieldAvailabilityService, fieldUsageBlockService, gameService);
+        fieldDetailView.setNavigationHandler(this::navigate);
         gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
         gameView.setNavigationHandler(this::navigate);
         seasonView = new SeasonView(seasonService, leagueService, scheduleGeneratorService, gameView, gameService);
         seasonView.setNavigationHandler(this::navigate);
-        seasonDetailView = new com.scheduleengine.season.SeasonDetailView(seasonService, leagueService, this::navigate);
+        seasonDetailView = new com.scheduleengine.season.SeasonDetailView(seasonService, leagueService, this::navigate, scheduleGeneratorService, gameService);
         rosterView = new RosterView(playerService, teamService, this::navigate);
         playerDetailView = new com.scheduleengine.player.PlayerDetailView(playerService, teamService, this::navigate);
         tournamentView = new TournamentView(tournamentService, tournamentRegistrationService, leagueService, teamService);
@@ -456,6 +460,12 @@ public class MainView {
                 contentArea.getChildren().add(fieldView.getView());
                 fieldView.refresh();
                 break;
+            case "field-detail":
+                com.scheduleengine.field.domain.Field field = context.getContextData("field-detail", com.scheduleengine.field.domain.Field.class);
+                if (field != null) {
+                    contentArea.getChildren().add(fieldDetailView.getView(field, context));
+                }
+                break;
             case "player-detail":
                 com.scheduleengine.player.domain.Player player = context.getContextData("player-detail", com.scheduleengine.player.domain.Player.class);
                 if (player != null) {
@@ -608,6 +618,7 @@ public class MainView {
             case "team-detail":
             case "team-games":
             case "team-roster":
+            case "team-stats":
                 return "teams";
 
             // Season-related views -> highlight Seasons
@@ -620,6 +631,7 @@ public class MainView {
 
             // Game-related views -> highlight Games
             case "games":
+            case "game-detail":
                 return "games";
 
             // Roster-related views -> highlight Rosters
@@ -629,10 +641,12 @@ public class MainView {
 
             // Fields -> highlight Fields
             case "fields":
+            case "field-detail":
                 return "fields";
 
             // Tournaments -> highlight Tournaments
             case "tournaments":
+            case "tournament-detail":
                 return "tournaments";
 
             // Default

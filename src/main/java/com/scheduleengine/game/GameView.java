@@ -121,10 +121,7 @@ public class GameView {
         Button addButton = new Button("Add Game");
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
-        
-        Button refreshButton = new Button("Refresh");
-        refreshButton.setOnAction(e -> loadData());
-        
+
         // Add "Back to Team Detail" button if filtered by team
         if (filterTeam != null && navigationHandler != null) {
             Button backToTeamBtn = new Button("← Back to " + filterTeam.getName());
@@ -139,21 +136,22 @@ public class GameView {
 
             topBox.getChildren().addAll(title, spacer, backToTeamBtn,
                 new Label("League:"), leagueFilter,
-                new Label("Season:"), seasonFilter, clearFilter, refreshButton, addButton);
+                new Label("Season:"), seasonFilter, clearFilter, addButton);
         } else {
             topBox.getChildren().addAll(title, spacer,
                 new Label("League:"), leagueFilter,
-                new Label("Season:"), seasonFilter, clearFilter, refreshButton, addButton);
+                new Label("Season:"), seasonFilter, clearFilter, addButton);
         }
 
         table = new TableView<>();
         table.setItems(data);
-        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         TableColumn<Game, Long> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         idCol.setPrefWidth(50);
-        
+        idCol.setVisible(false);
+
         TableColumn<Game, LocalDateTime> dateCol = new TableColumn<>("Date/Time");
         dateCol.setCellValueFactory(new PropertyValueFactory<>("gameDate"));
         dateCol.setPrefWidth(180);
@@ -470,6 +468,7 @@ public class GameView {
             }
         });
     }
+
 
     private void showError(String title, String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);

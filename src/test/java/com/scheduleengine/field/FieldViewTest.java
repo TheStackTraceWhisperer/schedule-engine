@@ -4,6 +4,7 @@ import com.scheduleengine.field.domain.Field;
 import com.scheduleengine.field.service.FieldAvailabilityService;
 import com.scheduleengine.field.service.FieldService;
 import com.scheduleengine.field.service.FieldUsageBlockService;
+import com.scheduleengine.game.service.GameService;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -30,6 +31,8 @@ class FieldViewTest {
     private FieldAvailabilityService availabilityService;
     @Mock
     private FieldUsageBlockService usageBlockService;
+    @Mock
+    private GameService gameService;
 
     private FieldView fieldView;
 
@@ -41,7 +44,7 @@ class FieldViewTest {
         when(availabilityService.findByField(any())).thenReturn(Collections.emptyList());
         when(usageBlockService.findByField(any())).thenReturn(Collections.emptyList());
 
-        fieldView = new FieldView(fieldService, availabilityService, usageBlockService);
+        fieldView = new FieldView(fieldService, availabilityService, usageBlockService, gameService);
 
         VBox view = fieldView.getView();
         Scene scene = new Scene(view, 900, 600);
