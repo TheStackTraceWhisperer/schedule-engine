@@ -135,6 +135,23 @@ public class TeamDetailView {
         GridPane.setHgrow(statsCard, Priority.ALWAYS);
         GridPane.setFillWidth(statsCard, true);
 
+        // Payments card
+        DrillDownCard paymentsCard = new DrillDownCard(
+            "View Payments",
+            "See outstanding and pending payments for " + team.getName(),
+            FontAwesomeIcon.DOLLAR,
+            () -> {
+                NavigationContext newContext = currentContext.navigateTo(
+                    "payments",
+                    "Payments",
+                    team
+                );
+                navigationHandler.navigate(newContext);
+            }
+        );
+        GridPane.setHgrow(paymentsCard, Priority.ALWAYS);
+        GridPane.setFillWidth(paymentsCard, true);
+
         // Delete team card
         DrillDownCard deleteCard = new DrillDownCard(
             "Delete Team",
@@ -148,16 +165,19 @@ public class TeamDetailView {
 
         cardsGrid.add(rosterCard, 0, 0);
         cardsGrid.add(gamesCard, 1, 0);
+        cardsGrid.add(paymentsCard, 2, 0);
         cardsGrid.add(editCard, 0, 1);
         cardsGrid.add(statsCard, 1, 1);
-        cardsGrid.add(deleteCard, 0, 2);
+        cardsGrid.add(deleteCard, 2, 1);
 
         // Configure grid columns to be equal width
         ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(50);
+        col1.setPercentWidth(33.33);
         ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(50);
-        cardsGrid.getColumnConstraints().addAll(col1, col2);
+        col2.setPercentWidth(33.33);
+        ColumnConstraints col3 = new ColumnConstraints();
+        col3.setPercentWidth(33.34);
+        cardsGrid.getColumnConstraints().addAll(col1, col2, col3);
 
         container.getChildren().addAll(header, sectionTitle, cardsGrid);
 

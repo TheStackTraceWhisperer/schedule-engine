@@ -78,7 +78,11 @@ public class TeamView {
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
 
-        topBox.getChildren().addAll(title, spacer, new Label("League:"), leagueFilter, clearFilter, addButton);
+
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setOnAction(e -> loadData());
+
+        topBox.getChildren().addAll(title, spacer, new Label("League:"), leagueFilter, clearFilter, addButton, refreshButton);
 
         table = new TableView<>();
         table.setItems(data);

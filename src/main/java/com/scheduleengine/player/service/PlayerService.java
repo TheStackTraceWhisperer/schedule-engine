@@ -28,6 +28,10 @@ public class PlayerService {
         return playerRepository.findByTeamId(teamId);
     }
 
+    public Optional<Player> findByFirstNameAndLastName(String firstName, String lastName) {
+        return playerRepository.findByFirstNameAndLastName(firstName, lastName);
+    }
+
     public Player save(Player player) {
         return playerRepository.save(player);
     }

@@ -305,8 +305,6 @@ public class FieldDetailView {
         table.setEditable(true);
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        // ...existing code...
-
         TableColumn<FieldUsageBlock, String> dayCol = new TableColumn<>("Day");
         dayCol.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().getDayOfWeek().toString()));
         dayCol.setCellFactory(ComboBoxTableCell.forTableColumn(
@@ -446,7 +444,7 @@ public class FieldDetailView {
                     // Create a copy of the list to avoid modification during iteration
                     List<FieldUsageBlock> blocksToDelete = new ArrayList<>(selectedItems);
                     for (FieldUsageBlock block : blocksToDelete) {
-                        usageBlockService.deleteById(block.getId());
+                        usageBlockService.delete(block.getId());
                         table.getItems().remove(block);
                     }
                     FieldDetailView.this.refreshUtilization(field, utilizationRefresh);

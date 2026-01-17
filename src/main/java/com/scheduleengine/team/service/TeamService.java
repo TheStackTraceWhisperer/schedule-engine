@@ -1,5 +1,6 @@
 package com.scheduleengine.team.service;
 
+import com.scheduleengine.league.domain.League;
 import com.scheduleengine.team.domain.Team;
 import com.scheduleengine.team.repository.TeamRepository;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,10 @@ public class TeamService {
         return teamRepository.findByLeagueId(leagueId);
     }
     
+    public List<Team> findByLeague(League league) {
+        return teamRepository.findByLeague(league);
+    }
+
     public Team save(Team team) {
         return teamRepository.save(team);
     }

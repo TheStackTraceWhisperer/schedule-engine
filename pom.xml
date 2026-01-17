@@ -60,10 +60,17 @@
       <artifactId>javafx-controls</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
       <version>${javafx.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.controlsfx</groupId>
+      <artifactId>controlsfx</artifactId>
+      <version>11.2.1</version>
     </dependency>
     
     <!-- FontAwesomeFX for icons -->
@@ -99,12 +106,18 @@
       <version>5.8.0</version>
       <scope>test</scope>
     </dependency>
-    <!-- For headless testing -->
     <dependency>
       <groupId>org.testfx</groupId>
       <artifactId>openjfx-monocle</artifactId>
       <version>21.0.2</version>
       <scope>test</scope>
+    </dependency>
+
+    <!-- Data Faker -->
+    <dependency>
+        <groupId>com.github.javafaker</groupId>
+        <artifactId>javafaker</artifactId>
+        <version>1.0.2</version>
     </dependency>
   </dependencies>
 

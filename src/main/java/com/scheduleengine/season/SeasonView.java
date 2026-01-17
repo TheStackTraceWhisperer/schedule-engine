@@ -68,7 +68,14 @@ public class SeasonView {
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
 
-        topBox.getChildren().addAll(title, spacer, addButton);
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setOnAction(e -> refresh());
+
+        Button generateScheduleButton = new Button("Generate Schedule");
+        generateScheduleButton.setOnAction(e -> showGenerateScheduleDialog());
+
+
+        topBox.getChildren().addAll(title, spacer, addButton, refreshButton, generateScheduleButton);
 
         table = new TableView<>();
         table.setItems(data);
@@ -301,5 +308,8 @@ public class SeasonView {
 
         return league.getName() + " - " + season + "/" + year;
     }
-}
 
+    private void showGenerateScheduleDialog() {
+        // TODO: Implement this method
+    }
+}

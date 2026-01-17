@@ -60,6 +60,8 @@ class MainViewTest {
 
     @Mock
     private TournamentRegistrationService tournamentRegistrationService;
+    @Mock
+    private com.scheduleengine.payment.service.TransactionService transactionService;
 
     private MainView mainView;
 
@@ -86,7 +88,8 @@ class MainViewTest {
             tournamentService,
             tournamentRegistrationService,
             fieldAvailabilityService,
-            fieldUsageBlockService
+            fieldUsageBlockService,
+            transactionService
         );
 
         mainView.start(stage);

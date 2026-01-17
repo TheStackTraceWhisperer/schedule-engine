@@ -125,6 +125,23 @@ public class LeagueDetailView {
     GridPane.setHgrow(statsCard, Priority.ALWAYS);
     GridPane.setFillWidth(statsCard, true);
 
+    // Payments card
+    DrillDownCard paymentsCard = new DrillDownCard(
+      "View Payment Details",
+      "Open payments for due invoices in this league",
+      FontAwesomeIcon.MONEY,
+      () -> {
+        NavigationContext newContext = currentContext.navigateTo(
+          "payments",
+          "Payments",
+          league
+        );
+        navigationHandler.navigate(newContext);
+      }
+    );
+    GridPane.setHgrow(paymentsCard, Priority.ALWAYS);
+    GridPane.setFillWidth(paymentsCard, true);
+
     // Delete league card
     DrillDownCard deleteCard = new DrillDownCard(
       "Delete League",
@@ -140,6 +157,7 @@ public class LeagueDetailView {
     cardsGrid.add(seasonsCard, 1, 0);
     cardsGrid.add(editCard, 0, 1);
     cardsGrid.add(statsCard, 1, 1);
+    cardsGrid.add(paymentsCard, 1, 2);
     cardsGrid.add(deleteCard, 0, 2);
 
     container.getChildren().addAll(header, sectionTitle, cardsGrid);

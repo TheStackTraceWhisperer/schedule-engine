@@ -36,10 +36,12 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import com.scheduleengine.payment.PaymentsView;
+import com.scheduleengine.payment.service.TransactionService;
 
 @Component
 public class MainView {
-    
+
     private final LeagueService leagueService;
     private final TeamService teamService;
     private final FieldService fieldService;
@@ -51,6 +53,7 @@ public class MainView {
     private final PlayerService playerService;
     private final TournamentService tournamentService;
     private final TournamentRegistrationService tournamentRegistrationService;
+    private final TransactionService transactionService;
 
     private LeagueView leagueView;
     private LeagueDetailView leagueDetailView;
@@ -64,6 +67,7 @@ public class MainView {
     private RosterView rosterView;
     private com.scheduleengine.player.PlayerDetailView playerDetailView;
     private TournamentView tournamentView;
+    private PaymentsView paymentsView;
 
     private NavigationContext currentNavigationContext;
     private BreadcrumbBar breadcrumbBar;
@@ -74,7 +78,8 @@ public class MainView {
                    PlayerService playerService, TournamentService tournamentService,
                    TournamentRegistrationService tournamentRegistrationService,
                    FieldAvailabilityService fieldAvailabilityService,
-                   FieldUsageBlockService fieldUsageBlockService) {
+                   FieldUsageBlockService fieldUsageBlockService,
+                   TransactionService transactionService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
@@ -86,8 +91,9 @@ public class MainView {
         this.tournamentRegistrationService = tournamentRegistrationService;
         this.fieldAvailabilityService = fieldAvailabilityService;
         this.fieldUsageBlockService = fieldUsageBlockService;
+        this.transactionService = transactionService;
     }
-    
+
     private StackPane contentArea;
     private String currentView = "leagues";
     private final java.util.Map<String, Button> navButtons = new java.util.HashMap<>();
@@ -102,7 +108,7 @@ public class MainView {
 
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Schedule Engine");
-        
+
         // Restore window state from preferences before showing
         WindowPreferencesUtil.restoreWindowState(primaryStage);
 
@@ -132,6 +138,8 @@ public class MainView {
         playerDetailView = new com.scheduleengine.player.PlayerDetailView(playerService, teamService, this::navigate);
         tournamentView = new TournamentView(tournamentService, tournamentRegistrationService, leagueService, teamService);
         tournamentView.setNavigationHandler(this::navigate);
+        paymentsView = new PaymentsView(transactionService, teamService, playerService, leagueService, tournamentService);
+        paymentsView.setNavigationHandler(this::navigate);
 
         // Create breadcrumb bar
         breadcrumbBar = new BreadcrumbBar(this::navigate);
@@ -169,9 +177,9 @@ public class MainView {
         sidebarScroll.setMinWidth(220);
         sidebarScroll.setMaxWidth(220);
         sidebarScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        sidebarScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        sidebarScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        // CSS to hide scrollbar completely
+        // CSS to hide horizontal scrollbar, allow vertical scrolling
         sidebarScroll.setStyle(
             "-fx-background-color: #2c3e50;" +
             "-fx-background: #2c3e50;" +
@@ -187,7 +195,7 @@ public class MainView {
         // Setup persistence of window state on close and periodically
         WindowPreferencesUtil.setupWindowStatePersistence(primaryStage);
     }
-    
+
     /**
      * Apply global CSS styling that respects UI scale settings
      */
@@ -547,7 +555,21 @@ public class MainView {
                 contentArea.getChildren().add(createRegistrationView());
                 break;
             case "payments":
-                contentArea.getChildren().add(createPaymentsView());
+                contentArea.getChildren().add(paymentsView.getView());
+                paymentsView.refresh();
+                // Team-filtered navigation
+                Team teamForPayments = context.getContextData("payments", Team.class);
+                if (teamForPayments != null) {
+                    paymentsView.filterByTeam(teamForPayments.getName());
+                } else {
+                    // League-filtered navigation for due payments
+                    League leagueForPayments = context.getContextData("payments", League.class);
+                    if (leagueForPayments != null) {
+                        paymentsView.filterByLeagueDue(leagueForPayments.getName());
+                    } else {
+                        paymentsView.clearFilters();
+                    }
+                }
                 break;
             case "operations":
                 contentArea.getChildren().add(createOperationsView());
@@ -1160,3 +1182,4 @@ public class MainView {
         return vbox;
     }
 }
+

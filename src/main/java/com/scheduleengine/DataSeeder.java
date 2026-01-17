@@ -1,5 +1,6 @@
 package com.scheduleengine;
 
+import com.github.javafaker.Faker;
 import com.scheduleengine.field.domain.Field;
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.season.domain.Season;
@@ -18,6 +19,8 @@ import com.scheduleengine.field.domain.FieldAvailability;
 import com.scheduleengine.field.domain.FieldUsageBlock;
 import com.scheduleengine.field.service.FieldAvailabilityService;
 import com.scheduleengine.field.service.FieldUsageBlockService;
+import com.scheduleengine.payment.domain.Transaction;
+import com.scheduleengine.payment.service.TransactionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -34,6 +37,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
+    private final Faker faker = new Faker();
     private final LeagueService leagueService;
     private final TeamService teamService;
     private final FieldService fieldService;
@@ -43,11 +47,13 @@ public class DataSeeder implements CommandLineRunner {
     private final GameService gameService;
     private final FieldAvailabilityService fieldAvailabilityService;
     private final FieldUsageBlockService fieldUsageBlockService;
+    private final TransactionService transactionService;
 
     public DataSeeder(LeagueService leagueService, TeamService teamService,
                      FieldService fieldService, SeasonService seasonService, PlayerService playerService,
                      TournamentService tournamentService, GameService gameService,
-                     FieldAvailabilityService fieldAvailabilityService, FieldUsageBlockService fieldUsageBlockService) {
+                     FieldAvailabilityService fieldAvailabilityService, FieldUsageBlockService fieldUsageBlockService,
+                     TransactionService transactionService) {
         this.leagueService = leagueService;
         this.teamService = teamService;
         this.fieldService = fieldService;
@@ -57,6 +63,7 @@ public class DataSeeder implements CommandLineRunner {
         this.gameService = gameService;
         this.fieldAvailabilityService = fieldAvailabilityService;
         this.fieldUsageBlockService = fieldUsageBlockService;
+        this.transactionService = transactionService;
     }
 
     @Override
@@ -256,6 +263,9 @@ public class DataSeeder implements CommandLineRunner {
                 Tournament.TournamentType.LEAGUE, LocalDate.of(2026, 7, 10), LocalDate.of(2026, 7, 17),
                 youthLeague, 8, LocalDate.of(2026, 7, 1), 20.0, "Riverside Park Field");
 
+        // Seed transactions with various statuses
+        log.info("Seeding transactions...");
+        seedTransactions();
 
         log.info("Database seeding completed successfully!");
         log.info("Created {} leagues, {} teams, {} players, {} fields, {} seasons, {} tournaments, {} games",
@@ -278,17 +288,17 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void createSoccerRoster(Team team) {
-        createPlayer("John", "Smith", 1, "Goalkeeper", team);
-        createPlayer("Carlos", "Mendez", 4, "Defender", team);
-        createPlayer("Alex", "Johnson", 5, "Defender", team);
-        createPlayer("Michael", "Chen", 6, "Midfielder", team);
-        createPlayer("David", "Rodriguez", 7, "Midfielder", team);
-        createPlayer("James", "Patterson", 8, "Midfielder", team);
-        createPlayer("Samuel", "Williams", 9, "Forward", team);
-        createPlayer("Marcus", "Brown", 10, "Forward", team);
-        createPlayer("Lucas", "Davis", 11, "Forward", team);
-        createPlayer("Oliver", "Garcia", 2, "Defender", team);
-        createPlayer("Ethan", "Martinez", 3, "Defender", team);
+        createPlayer(team.getName() + " Player 1", "Smith", 1, "Goalkeeper", team);
+        createPlayer(team.getName() + " Player 2", "Mendez", 4, "Defender", team);
+        createPlayer(team.getName() + " Player 3", "Johnson", 5, "Defender", team);
+        createPlayer(team.getName() + " Player 4", "Chen", 6, "Midfielder", team);
+        createPlayer(team.getName() + " Player 5", "Rodriguez", 7, "Midfielder", team);
+        createPlayer(team.getName() + " Player 6", "Patterson", 8, "Midfielder", team);
+        createPlayer(team.getName() + " Player 7", "Williams", 9, "Forward", team);
+        createPlayer(team.getName() + " Player 8", "Brown", 10, "Forward", team);
+        createPlayer(team.getName() + " Player 9", "Davis", 11, "Forward", team);
+        createPlayer(team.getName() + " Player 10", "Garcia", 2, "Defender", team);
+        createPlayer(team.getName() + " Player 11", "Martinez", 3, "Defender", team);
     }
 
     private void createYouthSoccerRoster(Team team) {
@@ -304,22 +314,26 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void createBasketballRoster(Team team) {
-        createPlayer("Anthony", "Cooper", 1, "Point Guard", team);
-        createPlayer("Kyle", "Edwards", 2, "Shooting Guard", team);
-        createPlayer("Derek", "Collins", 3, "Small Forward", team);
-        createPlayer("Jason", "Stewart", 4, "Power Forward", team);
-        createPlayer("Patrick", "Sanchez", 5, "Center", team);
-        createPlayer("Matthew", "Morris", 6, "Shooting Guard", team);
-        createPlayer("Andrew", "Rogers", 7, "Small Forward", team);
-        createPlayer("Daniel", "Peterson", 8, "Power Forward", team);
-        createPlayer("Christopher", "Gray", 9, "Center", team);
-        createPlayer("Joshua", "Ramirez", 11, "Point Guard", team);
+        createPlayer(team.getName() + " Player 1", "Cooper", 1, "Point Guard", team);
+        createPlayer(team.getName() + " Player 2", "Edwards", 2, "Shooting Guard", team);
+        createPlayer(team.getName() + " Player 3", "Collins", 3, "Small Forward", team);
+        createPlayer(team.getName() + " Player 4", "Stewart", 4, "Power Forward", team);
+        createPlayer(team.getName() + " Player 5", "Sanchez", 5, "Center", team);
+        createPlayer(team.getName() + " Player 6", "Morris", 6, "Shooting Guard", team);
+        createPlayer(team.getName() + " Player 7", "Rogers", 7, "Small Forward", team);
+        createPlayer(team.getName() + " Player 8", "Peterson", 8, "Power Forward", team);
+        createPlayer(team.getName() + " Player 9", "Gray", 9, "Center", team);
+        createPlayer(team.getName() + " Player 10", "Ramirez", 11, "Point Guard", team);
     }
 
     private void createPlayer(String firstName, String lastName, Integer jerseyNumber, String position, Team team) {
+        // Prevent duplicate players based on name
+        if (playerService.findByFirstNameAndLastName(firstName, lastName).isPresent()) {
+            return;
+        }
         Player player = new Player();
-        player.setFirstName(firstName);
-        player.setLastName(lastName);
+        player.setFirstName(faker.name().firstName());
+        player.setLastName(faker.name().lastName());
         player.setJerseyNumber(jerseyNumber);
         player.setPosition(position);
         player.setTeam(team);
@@ -474,5 +488,155 @@ public class DataSeeder implements CommandLineRunner {
         // Only Saturday for tournament blocks - Sunday is left flexible by user
         fieldUsageBlockService.save(new FieldUsageBlock(field, DayOfWeek.SATURDAY, FieldUsageBlock.UsageType.TOURNAMENT,
             LocalTime.of(startHour, 0), LocalTime.of(endHour, 0), "Tournament play"));
+    }
+
+    private void seedTransactions() {
+        try {
+            List<Player> players = playerService.findAll();
+            if (players.isEmpty()) {
+                log.warn("No players found to seed transactions for.");
+                return;
+            }
+            // PENDING PAYMENTS - Recent invoices
+            Transaction pending1 = new Transaction();
+            pending1.setPartyType(Transaction.PartyType.TEAM);
+            pending1.setPartyId(1L); // Thunder United
+            pending1.setCategory(Transaction.Category.INVOICE);
+            pending1.setDate(LocalDate.now().minusDays(5));
+            pending1.setAmount(250.00);
+            pending1.setStatus(Transaction.Status.PENDING);
+            pending1.setNotes("League registration fee - Winter 2026");
+            transactionService.save(pending1);
+
+            Transaction pending2 = new Transaction();
+            pending2.setPartyType(Transaction.PartyType.TEAM);
+            pending2.setPartyId(2L); // Lightning FC
+            pending2.setCategory(Transaction.Category.INVOICE);
+            pending2.setDate(LocalDate.now().minusDays(3));
+            pending2.setAmount(200.00);
+            pending2.setStatus(Transaction.Status.PENDING);
+            pending2.setNotes("Tournament entry fee - Open Spring Classic");
+            transactionService.save(pending2);
+
+            Transaction pending3 = new Transaction();
+            pending3.setPartyType(Transaction.PartyType.TEAM);
+            pending3.setPartyId(3L); // Storm Strikers
+            pending3.setCategory(Transaction.Category.INVOICE);
+            pending3.setDate(LocalDate.now().minusDays(7));
+            pending3.setAmount(175.00);
+            pending3.setStatus(Transaction.Status.PENDING);
+            pending3.setNotes("Facility rental fee - Spring season");
+            transactionService.save(pending3);
+
+            // Player PENDING
+            Transaction playerPending = new Transaction();
+            playerPending.setPartyType(Transaction.PartyType.PLAYER);
+            playerPending.setPartyId(players.get(0).getId());
+            playerPending.setCategory(Transaction.Category.INVOICE);
+            playerPending.setDate(LocalDate.now().minusDays(10));
+            playerPending.setAmount(50.00);
+            playerPending.setStatus(Transaction.Status.PENDING);
+            playerPending.setNotes("Player registration fee");
+            transactionService.save(playerPending);
+
+
+            // PAID PAYMENTS - Completed transactions
+            Transaction paid1 = new Transaction();
+            paid1.setPartyType(Transaction.PartyType.TEAM);
+            paid1.setPartyId(4L); // Phoenix Rising
+            paid1.setCategory(Transaction.Category.PAYMENT);
+            paid1.setDate(LocalDate.now().minusDays(30));
+            paid1.setAmount(250.00);
+            paid1.setStatus(Transaction.Status.PAID);
+            paid1.setNotes("League registration fee - Winter 2026 PAID");
+            transactionService.save(paid1);
+
+            Transaction paid2 = new Transaction();
+            paid2.setPartyType(Transaction.PartyType.TEAM);
+            paid2.setPartyId(5L); // Dragon Warriors
+            paid2.setCategory(Transaction.Category.PAYMENT);
+            paid2.setDate(LocalDate.now().minusDays(20));
+            paid2.setAmount(150.00);
+            paid2.setStatus(Transaction.Status.PAID);
+            paid2.setNotes("Equipment fee - PAID");
+            transactionService.save(paid2);
+
+            Transaction paid3 = new Transaction();
+            paid3.setPartyType(Transaction.PartyType.TEAM);
+            paid3.setPartyId(6L); // Eagle Knights
+            paid3.setCategory(Transaction.Category.PAYMENT);
+            paid3.setDate(LocalDate.now().minusDays(15));
+            paid3.setAmount(200.00);
+            paid3.setStatus(Transaction.Status.PAID);
+            paid3.setNotes("Tournament entry fee - Premier Cup PAID");
+            transactionService.save(paid3);
+
+            Transaction paid4 = new Transaction();
+            paid4.setPartyType(Transaction.PartyType.TEAM);
+            paid4.setPartyId(1L); // Thunder United
+            paid4.setCategory(Transaction.Category.PAYMENT);
+            paid4.setDate(LocalDate.now().minusDays(10));
+            paid4.setAmount(100.00);
+            paid4.setStatus(Transaction.Status.PAID);
+            paid4.setNotes("Partial payment for Spring season - PAID");
+            transactionService.save(paid4);
+
+            // Player PAID
+            Transaction playerPaid = new Transaction();
+            playerPaid.setPartyType(Transaction.PartyType.PLAYER);
+            playerPaid.setPartyId(players.get(1).getId());
+            playerPaid.setCategory(Transaction.Category.PAYMENT);
+            playerPaid.setDate(LocalDate.now().minusDays(40));
+            playerPaid.setAmount(75.00);
+            playerPaid.setStatus(Transaction.Status.PAID);
+            playerPaid.setNotes("Player uniform fee - PAID");
+            transactionService.save(playerPaid);
+
+            // OVERDUE PAYMENTS - Past due invoices
+            Transaction overdue1 = new Transaction();
+            overdue1.setPartyType(Transaction.PartyType.TEAM);
+            overdue1.setPartyId(2L); // Lightning FC
+            overdue1.setCategory(Transaction.Category.INVOICE);
+            overdue1.setDate(LocalDate.now().minusDays(60)); // 2 months old
+            overdue1.setAmount(300.00);
+            overdue1.setStatus(Transaction.Status.OVERDUE);
+            overdue1.setNotes("Fall 2025 season fee - OVERDUE");
+            transactionService.save(overdue1);
+
+            Transaction overdue2 = new Transaction();
+            overdue2.setPartyType(Transaction.PartyType.TEAM);
+            overdue2.setPartyId(4L); // Phoenix Rising
+            overdue2.setCategory(Transaction.Category.INVOICE);
+            overdue2.setDate(LocalDate.now().minusDays(45)); // 1.5 months old
+            overdue2.setAmount(225.00);
+            overdue2.setStatus(Transaction.Status.OVERDUE);
+            overdue2.setNotes("Winter training facility fee - OVERDUE");
+            transactionService.save(overdue2);
+
+            Transaction overdue3 = new Transaction();
+            overdue3.setPartyType(Transaction.PartyType.TEAM);
+            overdue3.setPartyId(5L); // Dragon Warriors
+            overdue3.setCategory(Transaction.Category.INVOICE);
+            overdue3.setDate(LocalDate.now().minusDays(90)); // 3 months old
+            overdue3.setAmount(175.00);
+            overdue3.setStatus(Transaction.Status.OVERDUE);
+            overdue3.setNotes("Fall 2025 tournament entry - OVERDUE");
+            transactionService.save(overdue3);
+
+            // Player OVERDUE
+            Transaction playerOverdue = new Transaction();
+            playerOverdue.setPartyType(Transaction.PartyType.PLAYER);
+            playerOverdue.setPartyId(players.get(2).getId());
+            playerOverdue.setCategory(Transaction.Category.INVOICE);
+            playerOverdue.setDate(LocalDate.now().minusDays(50));
+            playerOverdue.setAmount(60.00);
+            playerOverdue.setStatus(Transaction.Status.OVERDUE);
+            playerOverdue.setNotes("Player fine - OVERDUE");
+            transactionService.save(playerOverdue);
+
+            log.info("Transactions seeded with PENDING, PAID, and OVERDUE statuses");
+        } catch (Exception e) {
+            log.warn("Could not seed transactions: {}", e.getMessage());
+        }
     }
 }

@@ -69,7 +69,13 @@ public class TournamentView {
         addButton.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addButton.setOnAction(e -> showAddDialog());
 
-        topBox.getChildren().addAll(title, spacer, new Label("Type:"), typeFilter, clearFilter, addButton);
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setOnAction(e -> loadData());
+
+        Button deleteButton = new Button("Delete Selected");
+        //deleteButton.setOnAction(e -> deleteSelectedTournament());
+
+        topBox.getChildren().addAll(title, spacer, new Label("Type:"), typeFilter, clearFilter, addButton, refreshButton, deleteButton);
 
         table = new TableView<>();
         table.setItems(data);

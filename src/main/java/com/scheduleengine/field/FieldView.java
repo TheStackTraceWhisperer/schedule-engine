@@ -62,7 +62,13 @@ public class FieldView {
         addBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
         addBtn.setOnAction(e -> showAddDialog());
 
-        topBox.getChildren().addAll(titleLabel, spacer, addBtn);
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setOnAction(e -> refresh());
+
+        Button deleteButton = new Button("Delete Selected");
+        deleteButton.setOnAction(e -> deleteSelectedField());
+
+        topBox.getChildren().addAll(titleLabel, spacer, addBtn, refreshButton, deleteButton);
 
         table = new TableView<>();
         table.setItems(data);
@@ -162,5 +168,8 @@ public class FieldView {
             loadData();
         });
     }
-}
 
+    private void deleteSelectedField() {
+        // TODO: Implement this method
+    }
+}
