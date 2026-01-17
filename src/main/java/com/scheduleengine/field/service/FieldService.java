@@ -9,31 +9,31 @@ import java.util.Optional;
 
 @Service
 public class FieldService {
-    
-    private final FieldRepository fieldRepository;
-    
-    public FieldService(FieldRepository fieldRepository) {
-        this.fieldRepository = fieldRepository;
-    }
-    
-    public List<Field> findAll() {
-        return fieldRepository.findAll();
-    }
-    
-    public Optional<Field> findById(Long id) {
-        return fieldRepository.findById(id);
-    }
-    
-    public Field save(Field field) {
-        return fieldRepository.save(field);
-    }
-    
-    public Field update(Long id, Field field) {
-        field.setId(id);
-        return fieldRepository.save(field);
-    }
 
-    public void deleteById(Long id) {
-        fieldRepository.deleteById(id);
-    }
+  private final FieldRepository fieldRepository;
+
+  public FieldService(FieldRepository fieldRepository) {
+    this.fieldRepository = fieldRepository;
+  }
+
+  public List<Field> findAll() {
+    return fieldRepository.findAll();
+  }
+
+  public Optional<Field> findById(Long id) {
+    return fieldRepository.findById(id);
+  }
+
+  public Field save(Field field) {
+    return fieldRepository.save(field);
+  }
+
+  public Field update(Long id, Field field) {
+    field.setId(id);
+    return fieldRepository.save(field);
+  }
+
+  public void deleteById(Long id) {
+    fieldRepository.deleteById(id);
+  }
 }

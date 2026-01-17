@@ -1,8 +1,8 @@
 package com.scheduleengine.player;
 
+import com.scheduleengine.navigation.NavigationHandler;
 import com.scheduleengine.player.service.PlayerService;
 import com.scheduleengine.team.service.TeamService;
-import com.scheduleengine.navigation.NavigationHandler;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -22,55 +22,55 @@ import static org.testfx.matcher.control.LabeledMatchers.hasText;
 @ExtendWith(ApplicationExtension.class)
 class RosterViewTest {
 
-    @Mock
-    private PlayerService playerService;
+  @Mock
+  private PlayerService playerService;
 
-    @Mock
-    private TeamService teamService;
+  @Mock
+  private TeamService teamService;
 
-    @Mock
-    private NavigationHandler navigationHandler;
+  @Mock
+  private NavigationHandler navigationHandler;
 
-    private RosterView rosterView;
+  private RosterView rosterView;
 
-    @Start
-    public void start(Stage stage) {
-        MockitoAnnotations.openMocks(this);
+  @Start
+  public void start(Stage stage) {
+    MockitoAnnotations.openMocks(this);
 
-        when(teamService.findAll()).thenReturn(Collections.emptyList());
+    when(teamService.findAll()).thenReturn(Collections.emptyList());
 
-        rosterView = new RosterView(playerService, teamService, navigationHandler);
+    rosterView = new RosterView(playerService, teamService, navigationHandler);
 
-        VBox view = rosterView.getView();
-        Scene scene = new Scene(view, 1000, 600);
-        stage.setScene(scene);
-        stage.show();
-    }
+    VBox view = rosterView.getView();
+    Scene scene = new Scene(view, 1000, 600);
+    stage.setScene(scene);
+    stage.show();
+  }
 
-    @Test
-    void shouldDisplayTitle() {
-        verifyThat("Team Rosters", hasText("Team Rosters"));
-    }
+  @Test
+  void shouldDisplayTitle() {
+    verifyThat("Team Rosters", hasText("Team Rosters"));
+  }
 
-    @Test
-    void shouldDisplayAddPlayerButton() {
-        verifyThat("Add Player", hasText("Add Player"));
-    }
+  @Test
+  void shouldDisplayAddPlayerButton() {
+    verifyThat("Add Player", hasText("Add Player"));
+  }
 
-    @Test
-    void shouldDisplayRefreshButton() {
-        verifyThat("Refresh", hasText("Refresh"));
-    }
+  @Test
+  void shouldDisplayRefreshButton() {
+    verifyThat("Refresh", hasText("Refresh"));
+  }
 
 
-    @Test
-    void shouldLoadTeamsForFilter() {
-        verify(teamService, atLeastOnce()).findAll();
-    }
+  @Test
+  void shouldLoadTeamsForFilter() {
+    verify(teamService, atLeastOnce()).findAll();
+  }
 
-    @Test
-    void shouldDisplayTeamFilterLabel() {
-        verifyThat("Team:", hasText("Team:"));
-    }
+  @Test
+  void shouldDisplayTeamFilterLabel() {
+    verifyThat("Team:", hasText("Team:"));
+  }
 }
 

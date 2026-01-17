@@ -9,10 +9,14 @@ import java.util.Optional;
 
 @Repository
 public interface TournamentRegistrationRepository extends JpaRepository<TournamentRegistration, Long> {
-    List<TournamentRegistration> findByTournamentId(Long tournamentId);
-    List<TournamentRegistration> findByTeamId(Long teamId);
-    List<TournamentRegistration> findByTournamentIdAndStatus(Long tournamentId, TournamentRegistration.RegistrationStatus status);
-    Optional<TournamentRegistration> findByTournamentIdAndTeamId(Long tournamentId, Long teamId);
-    long countByTournamentIdAndStatus(Long tournamentId, TournamentRegistration.RegistrationStatus status);
+  List<TournamentRegistration> findByTournamentId(Long tournamentId);
+
+  List<TournamentRegistration> findByTeamId(Long teamId);
+
+  List<TournamentRegistration> findByTournamentIdAndStatus(Long tournamentId, TournamentRegistration.RegistrationStatus status);
+
+  Optional<TournamentRegistration> findByTournamentIdAndTeamId(Long tournamentId, Long teamId);
+
+  long countByTournamentIdAndStatus(Long tournamentId, TournamentRegistration.RegistrationStatus status);
 }
 

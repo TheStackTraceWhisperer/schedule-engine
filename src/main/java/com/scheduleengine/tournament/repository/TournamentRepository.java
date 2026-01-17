@@ -8,8 +8,10 @@ import java.util.List;
 
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, Long> {
-    List<Tournament> findByLeagueId(Long leagueId);
-    List<Tournament> findByType(Tournament.TournamentType type);
-    List<Tournament> findByStatus(Tournament.TournamentStatus status);
+  List<Tournament> findByLeagueId(Long leagueId);
+
+  List<Tournament> findByType(Tournament.TournamentType type);
+
+  List<Tournament> findByStatus(Tournament.TournamentStatus status);
 }
 

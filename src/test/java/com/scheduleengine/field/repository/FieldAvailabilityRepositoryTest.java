@@ -16,103 +16,103 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 class FieldAvailabilityRepositoryTest {
 
-    @Autowired
-    private FieldRepository fieldRepository;
+  @Autowired
+  private FieldRepository fieldRepository;
 
-    @Autowired
-    private FieldAvailabilityRepository availabilityRepository;
+  @Autowired
+  private FieldAvailabilityRepository availabilityRepository;
 
-    private Field testField;
+  private Field testField;
 
-    @BeforeEach
-    void setUp() {
-        testField = new Field("Test Field");
-        testField.setLocation("Downtown");
-        testField = fieldRepository.save(testField);
-    }
+  @BeforeEach
+  void setUp() {
+    testField = new Field("Test Field");
+    testField.setLocation("Downtown");
+    testField = fieldRepository.save(testField);
+  }
 
-    @Test
-    void shouldSaveAndRetrieveFieldAvailability() {
-        FieldAvailability availability = new FieldAvailability(
-            testField,
-            DayOfWeek.MONDAY,
-            LocalTime.of(9, 0),
-            LocalTime.of(17, 0)
-        );
+  @Test
+  void shouldSaveAndRetrieveFieldAvailability() {
+    FieldAvailability availability = new FieldAvailability(
+      testField,
+      DayOfWeek.MONDAY,
+      LocalTime.of(9, 0),
+      LocalTime.of(17, 0)
+    );
 
-        FieldAvailability saved = availabilityRepository.save(availability);
+    FieldAvailability saved = availabilityRepository.save(availability);
 
-        assertNotNull(saved.getId());
-        assertEquals(DayOfWeek.MONDAY, saved.getDayOfWeek());
-    }
+    assertNotNull(saved.getId());
+    assertEquals(DayOfWeek.MONDAY, saved.getDayOfWeek());
+  }
 
-    @Test
-    void shouldFindByField() {
-        FieldAvailability monday = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
-        FieldAvailability tuesday = new FieldAvailability(testField, DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
+  @Test
+  void shouldFindByField() {
+    FieldAvailability monday = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
+    FieldAvailability tuesday = new FieldAvailability(testField, DayOfWeek.TUESDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
 
-        availabilityRepository.save(monday);
-        availabilityRepository.save(tuesday);
+    availabilityRepository.save(monday);
+    availabilityRepository.save(tuesday);
 
-        List<FieldAvailability> result = availabilityRepository.findByField(testField);
+    List<FieldAvailability> result = availabilityRepository.findByField(testField);
 
-        assertEquals(2, result.size());
-    }
+    assertEquals(2, result.size());
+  }
 
-    @Test
-    void shouldFindByFieldAndDayOfWeek() {
-        FieldAvailability monday = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
-        availabilityRepository.save(monday);
+  @Test
+  void shouldFindByFieldAndDayOfWeek() {
+    FieldAvailability monday = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
+    availabilityRepository.save(monday);
 
-        List<FieldAvailability> result = availabilityRepository.findByFieldAndDayOfWeek(testField, DayOfWeek.MONDAY);
+    List<FieldAvailability> result = availabilityRepository.findByFieldAndDayOfWeek(testField, DayOfWeek.MONDAY);
 
-        assertEquals(1, result.size());
-        assertEquals(DayOfWeek.MONDAY, result.get(0).getDayOfWeek());
-    }
+    assertEquals(1, result.size());
+    assertEquals(DayOfWeek.MONDAY, result.get(0).getDayOfWeek());
+  }
 
-    @Test
-    void shouldReturnEmptyListWhenNoAvailabilityForDay() {
-        List<FieldAvailability> result = availabilityRepository.findByFieldAndDayOfWeek(testField, DayOfWeek.SUNDAY);
+  @Test
+  void shouldReturnEmptyListWhenNoAvailabilityForDay() {
+    List<FieldAvailability> result = availabilityRepository.findByFieldAndDayOfWeek(testField, DayOfWeek.SUNDAY);
 
-        assertTrue(result.isEmpty());
-    }
+    assertTrue(result.isEmpty());
+  }
 
-    @Test
-    void shouldFindByDayOfWeek() {
-        FieldAvailability monday = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
-        availabilityRepository.save(monday);
+  @Test
+  void shouldFindByDayOfWeek() {
+    FieldAvailability monday = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
+    availabilityRepository.save(monday);
 
-        List<FieldAvailability> result = availabilityRepository.findByDayOfWeek(DayOfWeek.MONDAY);
+    List<FieldAvailability> result = availabilityRepository.findByDayOfWeek(DayOfWeek.MONDAY);
 
-        assertEquals(1, result.size());
-    }
+    assertEquals(1, result.size());
+  }
 
-    @Test
-    void shouldHandleMultipleFieldsWithSameDayAvailability() {
-        Field field2 = new Field("Field 2");
-        field2 = fieldRepository.save(field2);
+  @Test
+  void shouldHandleMultipleFieldsWithSameDayAvailability() {
+    Field field2 = new Field("Field 2");
+    field2 = fieldRepository.save(field2);
 
-        FieldAvailability avail1 = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
-        FieldAvailability avail2 = new FieldAvailability(field2, DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(16, 0));
+    FieldAvailability avail1 = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
+    FieldAvailability avail2 = new FieldAvailability(field2, DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(16, 0));
 
-        availabilityRepository.save(avail1);
-        availabilityRepository.save(avail2);
+    availabilityRepository.save(avail1);
+    availabilityRepository.save(avail2);
 
-        List<FieldAvailability> result = availabilityRepository.findByDayOfWeek(DayOfWeek.MONDAY);
+    List<FieldAvailability> result = availabilityRepository.findByDayOfWeek(DayOfWeek.MONDAY);
 
-        assertEquals(2, result.size());
-    }
+    assertEquals(2, result.size());
+  }
 
-    @Test
-    void shouldDeleteAvailability() {
-        FieldAvailability availability = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
-        FieldAvailability saved = availabilityRepository.save(availability);
+  @Test
+  void shouldDeleteAvailability() {
+    FieldAvailability availability = new FieldAvailability(testField, DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0));
+    FieldAvailability saved = availabilityRepository.save(availability);
 
-        availabilityRepository.deleteById(saved.getId());
+    availabilityRepository.deleteById(saved.getId());
 
-        List<FieldAvailability> result = availabilityRepository.findByField(testField);
-        assertTrue(result.isEmpty());
-    }
+    List<FieldAvailability> result = availabilityRepository.findByField(testField);
+    assertTrue(result.isEmpty());
+  }
 
 }
 

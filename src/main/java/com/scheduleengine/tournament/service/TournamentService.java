@@ -10,43 +10,43 @@ import java.util.Optional;
 @Service
 public class TournamentService {
 
-    private final TournamentRepository tournamentRepository;
+  private final TournamentRepository tournamentRepository;
 
-    public TournamentService(TournamentRepository tournamentRepository) {
-        this.tournamentRepository = tournamentRepository;
-    }
+  public TournamentService(TournamentRepository tournamentRepository) {
+    this.tournamentRepository = tournamentRepository;
+  }
 
-    public List<Tournament> findAll() {
-        return tournamentRepository.findAll();
-    }
+  public List<Tournament> findAll() {
+    return tournamentRepository.findAll();
+  }
 
-    public Optional<Tournament> findById(Long id) {
-        return tournamentRepository.findById(id);
-    }
+  public Optional<Tournament> findById(Long id) {
+    return tournamentRepository.findById(id);
+  }
 
-    public List<Tournament> findByLeagueId(Long leagueId) {
-        return tournamentRepository.findByLeagueId(leagueId);
-    }
+  public List<Tournament> findByLeagueId(Long leagueId) {
+    return tournamentRepository.findByLeagueId(leagueId);
+  }
 
-    public List<Tournament> findByType(Tournament.TournamentType type) {
-        return tournamentRepository.findByType(type);
-    }
+  public List<Tournament> findByType(Tournament.TournamentType type) {
+    return tournamentRepository.findByType(type);
+  }
 
-    public List<Tournament> findByStatus(Tournament.TournamentStatus status) {
-        return tournamentRepository.findByStatus(status);
-    }
+  public List<Tournament> findByStatus(Tournament.TournamentStatus status) {
+    return tournamentRepository.findByStatus(status);
+  }
 
-    public Tournament save(Tournament tournament) {
-        return tournamentRepository.save(tournament);
-    }
+  public Tournament save(Tournament tournament) {
+    return tournamentRepository.save(tournament);
+  }
 
-    public Tournament update(Long id, Tournament tournament) {
-        tournament.setId(id);
-        return tournamentRepository.save(tournament);
-    }
+  public Tournament update(Long id, Tournament tournament) {
+    tournament.setId(id);
+    return tournamentRepository.save(tournament);
+  }
 
-    public void deleteById(Long id) {
-        tournamentRepository.deleteById(id);
-    }
+  public void deleteById(Long id) {
+    tournamentRepository.deleteById(id);
+  }
 }
 

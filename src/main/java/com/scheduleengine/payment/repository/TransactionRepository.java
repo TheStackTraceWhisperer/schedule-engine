@@ -10,7 +10,9 @@ import java.util.List;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    List<Transaction> findByPartyTypeAndPartyId(PartyType partyType, Long partyId);
-    List<Transaction> findByPartyTypeAndPartyIdAndStatus(PartyType partyType, Long partyId, Transaction.Status status);
-    List<Transaction> findByPartyTypeAndPartyIdAndDateBetween(PartyType partyType, Long partyId, LocalDate start, LocalDate end);
+  List<Transaction> findByPartyTypeAndPartyId(PartyType partyType, Long partyId);
+
+  List<Transaction> findByPartyTypeAndPartyIdAndStatus(PartyType partyType, Long partyId, Transaction.Status status);
+
+  List<Transaction> findByPartyTypeAndPartyIdAndDateBetween(PartyType partyType, Long partyId, LocalDate start, LocalDate end);
 }

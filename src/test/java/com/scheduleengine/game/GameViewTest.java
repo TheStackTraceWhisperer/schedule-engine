@@ -1,7 +1,6 @@
 package com.scheduleengine.game;
 
 import com.scheduleengine.field.service.FieldService;
-import com.scheduleengine.game.domain.Game;
 import com.scheduleengine.game.service.GameService;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.season.service.SeasonService;
@@ -25,77 +24,77 @@ import static org.testfx.matcher.control.LabeledMatchers.hasText;
 @ExtendWith(ApplicationExtension.class)
 class GameViewTest {
 
-    @Mock
-    private GameService gameService;
+  @Mock
+  private GameService gameService;
 
-    @Mock
-    private TeamService teamService;
+  @Mock
+  private TeamService teamService;
 
-    @Mock
-    private FieldService fieldService;
+  @Mock
+  private FieldService fieldService;
 
-    @Mock
-    private SeasonService seasonService;
+  @Mock
+  private SeasonService seasonService;
 
-    @Mock
-    private LeagueService leagueService;
+  @Mock
+  private LeagueService leagueService;
 
-    private GameView gameView;
+  private GameView gameView;
 
-    @Start
-    public void start(Stage stage) {
-        MockitoAnnotations.openMocks(this);
+  @Start
+  public void start(Stage stage) {
+    MockitoAnnotations.openMocks(this);
 
-        when(gameService.findAll()).thenReturn(Collections.emptyList());
-        when(seasonService.findAll()).thenReturn(Collections.emptyList());
-        when(leagueService.findAll()).thenReturn(Collections.emptyList());
+    when(gameService.findAll()).thenReturn(Collections.emptyList());
+    when(seasonService.findAll()).thenReturn(Collections.emptyList());
+    when(leagueService.findAll()).thenReturn(Collections.emptyList());
 
-        gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
+    gameView = new GameView(gameService, teamService, fieldService, seasonService, leagueService);
 
-        VBox view = gameView.getView();
-        Scene scene = new Scene(view, 1200, 600);
-        stage.setScene(scene);
-        stage.show();
-    }
+    VBox view = gameView.getView();
+    Scene scene = new Scene(view, 1200, 600);
+    stage.setScene(scene);
+    stage.show();
+  }
 
-    @Test
-    void shouldDisplayTitle() {
-        verifyThat("Games", hasText("Games"));
-    }
+  @Test
+  void shouldDisplayTitle() {
+    verifyThat("Games", hasText("Games"));
+  }
 
-    @Test
-    void shouldDisplayAddGameButton() {
-        verifyThat("Add Game", hasText("Add Game"));
-    }
+  @Test
+  void shouldDisplayAddGameButton() {
+    verifyThat("Add Game", hasText("Add Game"));
+  }
 
-    @Test
-    void shouldDisplayRefreshButton() {
-        verifyThat("Refresh", hasText("Refresh"));
-    }
+  @Test
+  void shouldDisplayRefreshButton() {
+    verifyThat("Refresh", hasText("Refresh"));
+  }
 
-    @Test
-    void shouldDisplayDeleteSelectedButton() {
-        verifyThat("Delete Selected", hasText("Delete Selected"));
-    }
+  @Test
+  void shouldDisplayDeleteSelectedButton() {
+    verifyThat("Delete Selected", hasText("Delete Selected"));
+  }
 
-    @Test
-    void shouldDisplayClearFilterButton() {
-        verifyThat("Clear", hasText("Clear"));
-    }
+  @Test
+  void shouldDisplayClearFilterButton() {
+    verifyThat("Clear", hasText("Clear"));
+  }
 
-    @Test
-    void shouldLoadDataOnInitialization() {
-        verify(gameService, atLeastOnce()).findAll();
-    }
+  @Test
+  void shouldLoadDataOnInitialization() {
+    verify(gameService, atLeastOnce()).findAll();
+  }
 
-    @Test
-    void shouldLoadSeasonsForFilter() {
-        verify(seasonService, atLeastOnce()).findAll();
-    }
+  @Test
+  void shouldLoadSeasonsForFilter() {
+    verify(seasonService, atLeastOnce()).findAll();
+  }
 
-    @Test
-    void shouldLoadLeaguesForFilter() {
-        verify(leagueService, atLeastOnce()).findAll();
-    }
+  @Test
+  void shouldLoadLeaguesForFilter() {
+    verify(leagueService, atLeastOnce()).findAll();
+  }
 }
 

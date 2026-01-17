@@ -8,7 +8,9 @@ import java.util.List;
 
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
-    List<Game> findBySeasonId(Long seasonId);
-    List<Game> findByHomeTeamIdOrAwayTeamId(Long homeTeamId, Long awayTeamId);
-    void deleteBySeasonId(Long seasonId);
+  List<Game> findBySeasonId(Long seasonId);
+
+  List<Game> findByHomeTeamIdOrAwayTeamId(Long homeTeamId, Long awayTeamId);
+
+  void deleteBySeasonId(Long seasonId);
 }

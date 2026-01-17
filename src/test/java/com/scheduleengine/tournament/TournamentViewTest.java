@@ -23,67 +23,67 @@ import static org.testfx.matcher.control.LabeledMatchers.hasText;
 @ExtendWith(ApplicationExtension.class)
 class TournamentViewTest {
 
-    @Mock
-    private TournamentService tournamentService;
+  @Mock
+  private TournamentService tournamentService;
 
-    @Mock
-    private TournamentRegistrationService registrationService;
+  @Mock
+  private TournamentRegistrationService registrationService;
 
-    @Mock
-    private LeagueService leagueService;
+  @Mock
+  private LeagueService leagueService;
 
-    @Mock
-    private TeamService teamService;
+  @Mock
+  private TeamService teamService;
 
-    private TournamentView tournamentView;
+  private TournamentView tournamentView;
 
-    @Start
-    public void start(Stage stage) {
-        MockitoAnnotations.openMocks(this);
+  @Start
+  public void start(Stage stage) {
+    MockitoAnnotations.openMocks(this);
 
-        when(tournamentService.findAll()).thenReturn(Collections.emptyList());
+    when(tournamentService.findAll()).thenReturn(Collections.emptyList());
 
-        tournamentView = new TournamentView(tournamentService, registrationService, leagueService, teamService);
+    tournamentView = new TournamentView(tournamentService, registrationService, leagueService, teamService);
 
-        VBox view = tournamentView.getView();
-        Scene scene = new Scene(view, 1200, 600);
-        stage.setScene(scene);
-        stage.show();
-    }
+    VBox view = tournamentView.getView();
+    Scene scene = new Scene(view, 1200, 600);
+    stage.setScene(scene);
+    stage.show();
+  }
 
-    @Test
-    void shouldDisplayTitle() {
-        verifyThat("Tournaments", hasText("Tournaments"));
-    }
+  @Test
+  void shouldDisplayTitle() {
+    verifyThat("Tournaments", hasText("Tournaments"));
+  }
 
-    @Test
-    void shouldDisplayAddTournamentButton() {
-        verifyThat("Add Tournament", hasText("Add Tournament"));
-    }
+  @Test
+  void shouldDisplayAddTournamentButton() {
+    verifyThat("Add Tournament", hasText("Add Tournament"));
+  }
 
-    @Test
-    void shouldDisplayRefreshButton() {
-        verifyThat("Refresh", hasText("Refresh"));
-    }
+  @Test
+  void shouldDisplayRefreshButton() {
+    verifyThat("Refresh", hasText("Refresh"));
+  }
 
-    @Test
-    void shouldDisplayDeleteSelectedButton() {
-        verifyThat("Delete Selected", hasText("Delete Selected"));
-    }
+  @Test
+  void shouldDisplayDeleteSelectedButton() {
+    verifyThat("Delete Selected", hasText("Delete Selected"));
+  }
 
-    @Test
-    void shouldDisplayClearFilterButton() {
-        verifyThat("Clear", hasText("Clear"));
-    }
+  @Test
+  void shouldDisplayClearFilterButton() {
+    verifyThat("Clear", hasText("Clear"));
+  }
 
-    @Test
-    void shouldDisplayTypeFilterLabel() {
-        verifyThat("Type:", hasText("Type:"));
-    }
+  @Test
+  void shouldDisplayTypeFilterLabel() {
+    verifyThat("Type:", hasText("Type:"));
+  }
 
-    @Test
-    void shouldLoadDataOnInitialization() {
-        verify(tournamentService, atLeastOnce()).findAll();
-    }
+  @Test
+  void shouldLoadDataOnInitialization() {
+    verify(tournamentService, atLeastOnce()).findAll();
+  }
 }
 
