@@ -1,6 +1,10 @@
 package com.scheduleengine.league;
 
+import com.scheduleengine.common.ActionsColumnUtil;
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
+import com.scheduleengine.common.TableIconColumns;
 import com.scheduleengine.common.TablePreferencesUtil;
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
@@ -68,42 +72,30 @@ public class LeagueView {
     descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
     descCol.setPrefWidth(400);
 
-    TableColumn<League, Void> actionCol = new TableColumn<>("Actions");
-    actionCol.setPrefWidth(140);
-    actionCol.setCellFactory(param -> new TableCell<>() {
-      private final Button viewBtn = new Button("View Details");
+    TableColumn<League, Void> iconCol = TableIconColumns.iconColumn(
+      "Icon",
+      League::getIconName,
+      League::getIconBackgroundColor,
+      League::getIconGlyphColor,
+      32, 64
+    );
 
-      {
-        viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
-        viewBtn.setOnAction(e -> {
-          League league = getTableView().getItems().get(getIndex());
-          if (navigationHandler != null) {
-            com.scheduleengine.navigation.NavigationContext newContext =
-              new com.scheduleengine.navigation.NavigationContext()
-                .navigateTo("leagues", "Leagues")
-                .navigateTo("league-detail", league.getName(), league);
-            navigationHandler.navigate(newContext);
-          }
-        });
+    TableColumn<League, Void> actionCol = ActionsColumnUtil.viewDetailsColumn("Actions", league -> {
+      if (navigationHandler != null) {
+        com.scheduleengine.navigation.NavigationContext newContext =
+          new com.scheduleengine.navigation.NavigationContext()
+            .navigateTo("leagues", "Leagues")
+            .navigateTo("league-detail", league.getName(), league);
+        navigationHandler.navigate(newContext);
       }
+    }, 140);
 
-      @Override
-      protected void updateItem(Void item, boolean empty) {
-        super.updateItem(item, empty);
-        if (empty) {
-          setGraphic(null);
-        } else {
-          HBox buttons = new HBox(5, viewBtn);
-          setGraphic(buttons);
-        }
-      }
-    });
-
-    table.getColumns().addAll(idCol, nameCol, descCol, actionCol);
+    table.getColumns().addAll(idCol, iconCol, nameCol, descCol, actionCol);
 
     // Persist table state (widths, visibility, sort)
     TablePreferencesUtil.bind(table, "league");
     TablePreferencesUtil.attachToggleMenu(table, "league");
+    TablePreferencesUtil.setupTableColumnPersistence(table, "league.table");
 
     loadData();
 
@@ -150,10 +142,15 @@ public class LeagueView {
     descField.setMaxWidth(Double.MAX_VALUE);
     GridPane.setVgrow(descField, Priority.ALWAYS);
 
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(null, null, null, null);
+
     grid.add(new Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new Label("Description:"), 0, 1);
     grid.add(descField, 1, 1);
+    grid.add(iconLabel, 0, 2);
+    grid.add(iconPicker, 1, 2);
 
     dialog.getDialogPane().setContent(grid);
 
@@ -166,6 +163,10 @@ public class LeagueView {
         League league = new League();
         league.setName(nameField.getText());
         league.setDescription(descField.getText());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        league.setIconName(sel.iconName);
+        league.setIconBackgroundColor(sel.bgColor);
+        league.setIconGlyphColor(sel.glyphColor);
         return league;
       }
       return null;

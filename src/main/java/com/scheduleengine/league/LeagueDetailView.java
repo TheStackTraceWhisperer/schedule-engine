@@ -1,6 +1,8 @@
 package com.scheduleengine.league;
 
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.navigation.DrillDownCard;
@@ -10,6 +12,7 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 
 /**
  * Detail view for a specific league with drill-down navigation options
@@ -40,13 +43,18 @@ public class LeagueDetailView {
     Label nameLabel = new Label(league.getName());
     nameLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
+    HBox headerTop = new HBox(10);
+    StackPane iconBadge = IconBadge.build(league.getIconName(), league.getIconBackgroundColor(), league.getIconGlyphColor(), 36);
+    headerTop.getChildren().addAll(iconBadge, nameLabel);
+
+    // replace header children assembly
+    header.getChildren().clear();
+    header.getChildren().add(headerTop);
     if (league.getDescription() != null && !league.getDescription().isBlank()) {
       Label descLabel = new Label(league.getDescription());
       descLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
       descLabel.setWrapText(true);
-      header.getChildren().addAll(nameLabel, descLabel);
-    } else {
-      header.getChildren().add(nameLabel);
+      header.getChildren().add(descLabel);
     }
 
     // Section title
@@ -193,10 +201,15 @@ public class LeagueDetailView {
     descField.setMaxWidth(Double.MAX_VALUE);
     GridPane.setVgrow(descField, Priority.ALWAYS);
 
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(league.getIconName(), league.getIconBackgroundColor(), league.getIconGlyphColor(), null);
+
     grid.add(new Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new Label("Description:"), 0, 1);
     grid.add(descField, 1, 1);
+    grid.add(iconLabel, 0, 2);
+    grid.add(iconPicker, 1, 2);
 
     dialog.getDialogPane().setContent(grid);
 
@@ -208,6 +221,10 @@ public class LeagueDetailView {
       if (dialogButton == saveButtonType) {
         league.setName(nameField.getText());
         league.setDescription(descField.getText());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        league.setIconName(sel.iconName);
+        league.setIconBackgroundColor(sel.bgColor);
+        league.setIconGlyphColor(sel.glyphColor);
         return league;
       }
       return null;

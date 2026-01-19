@@ -1,18 +1,26 @@
 package com.scheduleengine.team;
 
+import com.scheduleengine.common.ActionsColumnUtil;
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
+import com.scheduleengine.common.TableIconColumns;
 import com.scheduleengine.common.TablePreferencesUtil;
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.team.domain.Team;
 import com.scheduleengine.team.service.TeamService;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -127,38 +135,25 @@ public class TeamView {
     contactPhoneCol.setCellValueFactory(new PropertyValueFactory<>("contactPhone"));
     contactPhoneCol.setPrefWidth(120);
 
-    TableColumn<Team, Void> actionCol = new TableColumn<>("Actions");
-    actionCol.setPrefWidth(150);
-    actionCol.setCellFactory(col -> new TableCell<>() {
-      private final Button viewBtn = new Button("View Details");
-
-      {
-        viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
-        viewBtn.setOnAction(e -> {
-          Team team = getTableView().getItems().get(getIndex());
-          if (navigationHandler != null) {
-            com.scheduleengine.navigation.NavigationContext newContext =
-              new com.scheduleengine.navigation.NavigationContext()
-                .navigateTo("teams", "Teams")
-                .navigateTo("team-detail", team.getName(), team);
-            navigationHandler.navigate(newContext);
-          }
-        });
+    TableColumn<Team, Void> actionCol = ActionsColumnUtil.viewDetailsColumn("Actions", team -> {
+      if (navigationHandler != null) {
+        com.scheduleengine.navigation.NavigationContext newContext =
+          new com.scheduleengine.navigation.NavigationContext()
+            .navigateTo("teams", "Teams")
+            .navigateTo("team-detail", team.getName(), team);
+        navigationHandler.navigate(newContext);
       }
+    }, 150);
 
-      @Override
-      protected void updateItem(Void item, boolean empty) {
-        super.updateItem(item, empty);
-        if (empty) {
-          setGraphic(null);
-        } else {
-          HBox box = new HBox(6, viewBtn);
-          setGraphic(box);
-        }
-      }
-    });
+    TableColumn<Team, Void> iconCol = TableIconColumns.iconColumn(
+      "Icon",
+      Team::getIconName,
+      Team::getIconBackgroundColor,
+      Team::getIconGlyphColor,
+      32, 64
+    );
 
-    table.getColumns().addAll(idCol, nameCol, leagueCol, contactEmailCol, contactPhoneCol, actionCol);
+    table.getColumns().addAll(idCol, iconCol, nameCol, leagueCol, contactEmailCol, contactPhoneCol, actionCol);
 
     // Persist table state (widths, visibility, sort)
     com.scheduleengine.common.TablePreferencesUtil.bind(table, "team");
@@ -233,6 +228,9 @@ public class TeamView {
     leagueCombo.setMaxWidth(Double.MAX_VALUE);
     configureLeagueCombo(leagueCombo);
 
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(null, null, null, null);
+
     grid.add(new Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new Label("Coach:"), 0, 1);
@@ -241,12 +239,10 @@ public class TeamView {
     grid.add(emailField, 1, 2);
     grid.add(new Label("League:"), 0, 3);
     grid.add(leagueCombo, 1, 3);
+    grid.add(iconLabel, 0, 4);
+    grid.add(iconPicker, 1, 4);
 
     dialog.getDialogPane().setContent(grid);
-
-    // Make dialog resizable and persist size
-    dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
-      DialogUtil.makeResizable(dialog, "team.add", 600, 450));
 
     dialog.setResultConverter(dialogButton -> {
       if (dialogButton == saveButtonType) {
@@ -259,6 +255,10 @@ public class TeamView {
         team.setCoach(coachField.getText());
         team.setContactEmail(emailField.getText());
         team.setLeague(leagueCombo.getValue());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        team.setIconName(sel.iconName);
+        team.setIconBackgroundColor(sel.bgColor);
+        team.setIconGlyphColor(sel.glyphColor);
         return team;
       }
       return null;
@@ -270,6 +270,12 @@ public class TeamView {
     });
   }
 
+  private static String toHex(Color c) {
+    int r = (int) Math.round(c.getRed() * 255);
+    int g = (int) Math.round(c.getGreen() * 255);
+    int b = (int) Math.round(c.getBlue() * 255);
+    return String.format("#%02x%02x%02x", r, g, b);
+  }
 
   private void configureLeagueCombo(ComboBox<League> combo) {
     combo.setConverter(new StringConverter<>() {

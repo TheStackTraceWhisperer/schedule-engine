@@ -38,6 +38,15 @@ public class Team {
   @OneToMany(mappedBy = "awayTeam", cascade = CascadeType.ALL)
   private List<Game> awayGames = new ArrayList<>();
 
+  @Column(name = "icon_name")
+  private String iconName; // e.g., "FUTBOL_ALT", "USERS"
+
+  @Column(name = "icon_bg_color")
+  private String iconBackgroundColor; // CSS hex like "#2c3e50"
+
+  @Column(name = "icon_glyph_color")
+  private String iconGlyphColor; // CSS hex like "#ffffff"
+
   public Team() {
   }
 
@@ -108,5 +117,29 @@ public class Team {
 
   public void setAwayGames(List<Game> awayGames) {
     this.awayGames = awayGames;
+  }
+
+  public String getIconName() {
+    return iconName;
+  }
+
+  public void setIconName(String iconName) {
+    this.iconName = iconName;
+  }
+
+  public String getIconBackgroundColor() {
+    return iconBackgroundColor;
+  }
+
+  public void setIconBackgroundColor(String iconBackgroundColor) {
+    this.iconBackgroundColor = iconBackgroundColor;
+  }
+
+  public String getIconGlyphColor() {
+    return iconGlyphColor;
+  }
+
+  public void setIconGlyphColor(String iconGlyphColor) {
+    this.iconGlyphColor = iconGlyphColor;
   }
 }

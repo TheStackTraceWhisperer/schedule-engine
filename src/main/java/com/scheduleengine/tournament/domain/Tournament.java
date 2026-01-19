@@ -55,6 +55,15 @@ public class Tournament {
   @Column(length = 500)
   private String location;
 
+  @Column(name = "icon_name")
+  private String iconName;
+
+  @Column(name = "icon_bg_color")
+  private String iconBackgroundColor;
+
+  @Column(name = "icon_glyph_color")
+  private String iconGlyphColor;
+
   public Long getId() {
     return id;
   }
@@ -151,6 +160,30 @@ public class Tournament {
 
   public void setLocation(String location) {
     this.location = location;
+  }
+
+  public String getIconName() {
+    return iconName;
+  }
+
+  public void setIconName(String iconName) {
+    this.iconName = iconName;
+  }
+
+  public String getIconBackgroundColor() {
+    return iconBackgroundColor;
+  }
+
+  public void setIconBackgroundColor(String iconBackgroundColor) {
+    this.iconBackgroundColor = iconBackgroundColor;
+  }
+
+  public String getIconGlyphColor() {
+    return iconGlyphColor;
+  }
+
+  public void setIconGlyphColor(String iconGlyphColor) {
+    this.iconGlyphColor = iconGlyphColor;
   }
 
   public enum TournamentType {

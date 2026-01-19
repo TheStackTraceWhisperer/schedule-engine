@@ -29,6 +29,15 @@ public class Field {
   @OneToMany(mappedBy = "field", cascade = CascadeType.ALL)
   private List<Game> games = new ArrayList<>();
 
+  @Column(name = "icon_name")
+  private String iconName;
+
+  @Column(name = "icon_bg_color")
+  private String iconBackgroundColor;
+
+  @Column(name = "icon_glyph_color")
+  private String iconGlyphColor;
+
   public Field() {
   }
 
@@ -83,5 +92,29 @@ public class Field {
 
   public void setGames(List<Game> games) {
     this.games = games;
+  }
+
+  public String getIconName() {
+    return iconName;
+  }
+
+  public void setIconName(String iconName) {
+    this.iconName = iconName;
+  }
+
+  public String getIconBackgroundColor() {
+    return iconBackgroundColor;
+  }
+
+  public void setIconBackgroundColor(String iconBackgroundColor) {
+    this.iconBackgroundColor = iconBackgroundColor;
+  }
+
+  public String getIconGlyphColor() {
+    return iconGlyphColor;
+  }
+
+  public void setIconGlyphColor(String iconGlyphColor) {
+    this.iconGlyphColor = iconGlyphColor;
   }
 }

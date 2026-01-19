@@ -1,6 +1,7 @@
 package com.scheduleengine.field;
 
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
 import com.scheduleengine.common.TablePreferencesUtil;
 import com.scheduleengine.field.domain.Field;
 import com.scheduleengine.field.domain.FieldAvailability;
@@ -135,6 +136,8 @@ public class FieldDetailView {
     HBox titleBar = new HBox(15);
     titleBar.setAlignment(Pos.CENTER_LEFT);
 
+    StackPane iconBadge = IconBadge.build(field.getIconName(), field.getIconBackgroundColor(), field.getIconGlyphColor(), 28);
+
     Label title = new Label(field.getName());
     title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
@@ -145,7 +148,7 @@ public class FieldDetailView {
     deleteBtn.setStyle("-fx-padding: 8 16; -fx-background-color: #dc3545; -fx-text-fill: white; -fx-font-size: 12px;");
     deleteBtn.setOnAction(e -> confirmDeleteField(field));
 
-    titleBar.getChildren().addAll(title, spacer, deleteBtn);
+    titleBar.getChildren().addAll(iconBadge, title, spacer, deleteBtn);
 
     HBox infoBox = new HBox(20);
     infoBox.setAlignment(Pos.CENTER_LEFT);

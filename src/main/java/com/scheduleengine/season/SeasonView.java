@@ -1,7 +1,11 @@
 package com.scheduleengine.season;
 
+import com.scheduleengine.common.ActionsColumnUtil;
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
 import com.scheduleengine.common.ScheduleGeneratorResultView;
+import com.scheduleengine.common.TableIconColumns;
 import com.scheduleengine.common.TablePreferencesUtil;
 import com.scheduleengine.common.service.ScheduleGeneratorService;
 import com.scheduleengine.game.GameView;
@@ -106,38 +110,25 @@ public class SeasonView {
     ));
     leagueCol.setPrefWidth(200);
 
-    TableColumn<Season, Void> actionCol = new TableColumn<>("Actions");
-    actionCol.setPrefWidth(150);
-    actionCol.setCellFactory(col -> new TableCell<>() {
-      private final Button viewBtn = new Button("View Details");
-
-      {
-        viewBtn.setStyle("-fx-background-color: #667eea; -fx-text-fill: white;");
-        viewBtn.setOnAction(e -> {
-          Season season = getTableView().getItems().get(getIndex());
-          if (navigationHandler != null) {
-            NavigationContext newContext =
-              new NavigationContext()
-                .navigateTo("seasons", "Seasons")
-                .navigateTo("season-detail", season.getName(), season);
-            navigationHandler.navigate(newContext);
-          }
-        });
+    TableColumn<Season, Void> actionCol = ActionsColumnUtil.viewDetailsColumn("Actions", season -> {
+      if (navigationHandler != null) {
+        NavigationContext newContext =
+          new NavigationContext()
+            .navigateTo("seasons", "Seasons")
+            .navigateTo("season-detail", season.getName(), season);
+        navigationHandler.navigate(newContext);
       }
+    }, 150);
 
-      @Override
-      protected void updateItem(Void item, boolean empty) {
-        super.updateItem(item, empty);
-        if (empty) {
-          setGraphic(null);
-        } else {
-          HBox box = new HBox(6, viewBtn);
-          setGraphic(box);
-        }
-      }
-    });
+    TableColumn<Season, Void> iconCol = TableIconColumns.iconColumn(
+      "Icon",
+      Season::getIconName,
+      Season::getIconBackgroundColor,
+      Season::getIconGlyphColor,
+      32, 64
+    );
 
-    table.getColumns().addAll(idCol, nameCol, startCol, endCol, leagueCol, actionCol);
+    table.getColumns().addAll(idCol, iconCol, nameCol, startCol, endCol, leagueCol, actionCol);
 
     // Persist table state (widths, visibility, sort)
     TablePreferencesUtil.bind(table, "season");
@@ -238,6 +229,9 @@ public class SeasonView {
       nameField.setText(generateSeasonName(filterLeague));
     }
 
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(null, null, null, null);
+
     grid.add(new Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new Label("Start Date:"), 0, 1);
@@ -246,6 +240,8 @@ public class SeasonView {
     grid.add(endPicker, 1, 2);
     grid.add(new Label("League:"), 0, 3);
     grid.add(leagueCombo, 1, 3);
+    grid.add(iconLabel, 0, 4);
+    grid.add(iconPicker, 1, 4);
 
     dialog.getDialogPane().setContent(grid);
 
@@ -264,6 +260,10 @@ public class SeasonView {
         s.setStartDate(startPicker.getValue());
         s.setEndDate(endPicker.getValue());
         s.setLeague(leagueCombo.getValue());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        s.setIconName(sel.iconName);
+        s.setIconBackgroundColor(sel.bgColor);
+        s.setIconGlyphColor(sel.glyphColor);
         return s;
       }
       return null;

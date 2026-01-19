@@ -1,6 +1,8 @@
 package com.scheduleengine.team;
 
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
 import com.scheduleengine.navigation.DrillDownCard;
@@ -9,10 +11,13 @@ import com.scheduleengine.navigation.NavigationHandler;
 import com.scheduleengine.team.domain.Team;
 import com.scheduleengine.team.service.TeamService;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 /**
@@ -43,6 +48,11 @@ public class TeamDetailView {
     Label nameLabel = new Label(team.getName());
     nameLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
+    HBox headerTop = new HBox(10);
+    StackPane iconBadge = buildIconBadge(team);
+    headerTop.getChildren().addAll(iconBadge, nameLabel);
+    header.getChildren().addAll(headerTop);
+
     VBox infoBox = new VBox(5);
 
     if (team.getCoach() != null && !team.getCoach().isBlank()) {
@@ -63,7 +73,7 @@ public class TeamDetailView {
       infoBox.getChildren().add(leagueLabel);
     }
 
-    header.getChildren().addAll(nameLabel, infoBox);
+    header.getChildren().addAll(infoBox);
 
     // Section title
     Label sectionTitle = new Label("What would you like to do?");
@@ -184,6 +194,10 @@ public class TeamDetailView {
     return container;
   }
 
+  private StackPane buildIconBadge(Team team) {
+    return IconBadge.build(team.getIconName(), team.getIconBackgroundColor(), team.getIconGlyphColor(), 36);
+  }
+
   private void showEditDialog(Team team, NavigationContext currentContext) {
     Dialog<Team> dialog = new Dialog<>();
     dialog.setTitle("Edit Team");
@@ -216,14 +230,9 @@ public class TeamDetailView {
     leagueCombo.setMaxWidth(Double.MAX_VALUE);
     leagueCombo.setConverter(new StringConverter<>() {
       @Override
-      public String toString(League l) {
-        return l == null ? "" : l.getName();
-      }
-
+      public String toString(League l) { return l == null ? "" : l.getName(); }
       @Override
-      public League fromString(String s) {
-        return null;
-      }
+      public League fromString(String s) { return null; }
     });
     leagueCombo.setCellFactory(lv -> new ListCell<>() {
       @Override
@@ -234,6 +243,12 @@ public class TeamDetailView {
     });
     leagueCombo.setValue(team.getLeague());
 
+    // Icon selection + color pickers
+    Label iconLabel = new Label("Icon:");
+
+    IconPicker iconPicker = new IconPicker(team.getIconName(), team.getIconBackgroundColor(), team.getIconGlyphColor(), null);
+
+    // Layout fields
     grid.add(new Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new Label("Coach:"), 0, 1);
@@ -242,12 +257,17 @@ public class TeamDetailView {
     grid.add(emailField, 1, 2);
     grid.add(new Label("League:"), 0, 3);
     grid.add(leagueCombo, 1, 3);
+    grid.add(iconLabel, 0, 4);
+    grid.add(iconPicker, 1, 4);
 
     dialog.getDialogPane().setContent(grid);
 
-    // Make dialog resizable and persist size
+    // Adjust dialog sizing for larger icon preview/grid and persist
+    dialog.getDialogPane().setPrefSize(800, 700); // increased from 650x520
+    dialog.getDialogPane().setMinSize(700, 600);
+
     dialog.getDialogPane().getScene().getWindow().setOnShown(e ->
-      DialogUtil.makeResizable(dialog, "team.edit", 600, 450));
+      DialogUtil.makeResizable(dialog, "team.edit", 800, 700));
 
     dialog.setResultConverter(dialogButton -> {
       if (dialogButton == saveButtonType) {
@@ -258,6 +278,10 @@ public class TeamDetailView {
         team.setCoach(coachField.getText());
         team.setContactEmail(emailField.getText());
         team.setLeague(leagueCombo.getValue());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        team.setIconName(sel.iconName);
+        team.setIconBackgroundColor(sel.bgColor);
+        team.setIconGlyphColor(sel.glyphColor);
         return team;
       }
       return null;
@@ -290,6 +314,13 @@ public class TeamDetailView {
         navigationHandler.navigate(newContext);
       }
     });
+  }
+
+  private static String toHex(Color c) {
+    int r = (int) Math.round(c.getRed() * 255);
+    int g = (int) Math.round(c.getGreen() * 255);
+    int b = (int) Math.round(c.getBlue() * 255);
+    return String.format("#%02x%02x%02x", r, g, b);
   }
 }
 

@@ -1,9 +1,17 @@
 package com.scheduleengine.common;
 
+import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
@@ -44,21 +52,21 @@ public class TablePreferencesUtil {
     table.sceneProperty().addListener((obs, oldScene, newScene) -> {
       if (newScene != null && oldScene == null) {
         // Use runLater to ensure layout is complete
-        javafx.application.Platform.runLater(() -> restoreColumnWidths(table, tableId));
+        Platform.runLater(() -> restoreColumnWidths(table, tableId));
       }
     });
 
     // Also restore when table becomes visible (handles view switches without scene changes)
     table.visibleProperty().addListener((obs, wasVisible, isVisible) -> {
       if (isVisible) {
-        javafx.application.Platform.runLater(() -> restoreColumnWidths(table, tableId));
+        Platform.runLater(() -> restoreColumnWidths(table, tableId));
       }
     });
 
     // Also restore after skin is applied (ensures column header and resize policies are active)
     table.skinProperty().addListener((obs, oldSkin, newSkin) -> {
       if (newSkin != null) {
-        javafx.application.Platform.runLater(() -> restoreColumnWidths(table, tableId));
+        Platform.runLater(() -> restoreColumnWidths(table, tableId));
       }
     });
   }
@@ -113,7 +121,7 @@ public class TablePreferencesUtil {
    * @param column The column
    * @return A unique key for the column
    */
-  private static String getColumnKey(javafx.scene.control.TableColumn<?, ?> column) {
+  private static String getColumnKey(TableColumn<?, ?> column) {
     if (column.getText() != null && !column.getText().isEmpty()) {
       return column.getText().toLowerCase().replaceAll("\\s+", "_");
     }
@@ -159,11 +167,11 @@ public class TablePreferencesUtil {
     }
   }
 
-  public static void bind(javafx.scene.control.TableView<?> table, String key) {
-    java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(TablePreferencesUtil.class);
+  public static void bind(TableView<?> table, String key) {
+    Preferences prefs = Preferences.userNodeForPackage(TablePreferencesUtil.class);
     String base = "table." + key + ".";
     // Restore widths/visibility
-    for (javafx.scene.control.TableColumn<?, ?> col : table.getColumns()) {
+    for (TableColumn<?, ?> col : table.getColumns()) {
       String id = ensureId(col);
       double w = prefs.getDouble(base + id + ".width", -1);
       boolean vis = prefs.getBoolean(base + id + ".visible", true);
@@ -178,13 +186,13 @@ public class TablePreferencesUtil {
       String[] types = sortTypes.split(",");
       table.getSortOrder().clear();
       for (int i = 0; i < ids.length; i++) {
-        javafx.scene.control.TableColumn<?, ?> col = findColumnById(table, ids[i]);
+        TableColumn<?, ?> col = findColumnById(table, ids[i]);
         if (col != null) {
           try {
-            javafx.scene.control.TableColumn.SortType st = javafx.scene.control.TableColumn.SortType.valueOf(types[i]);
+            TableColumn.SortType st = TableColumn.SortType.valueOf(types[i]);
             col.setSortType(st);
             @SuppressWarnings({"rawtypes", "unchecked"})
-            javafx.scene.control.TableColumn raw = col;
+            TableColumn raw = col;
             table.getSortOrder().add(raw);
           } catch (Exception ignored) {
           }
@@ -193,27 +201,27 @@ public class TablePreferencesUtil {
       table.sort();
     }
     // Listen and persist
-    for (javafx.scene.control.TableColumn<?, ?> col : table.getColumns()) {
+    for (TableColumn<?, ?> col : table.getColumns()) {
       col.widthProperty().addListener((obs, o, n) -> prefs.putDouble(base + ensureId(col) + ".width", n.doubleValue()));
       col.visibleProperty().addListener((obs, o, n) -> prefs.putBoolean(base + ensureId(col) + ".visible", n));
     }
-    table.getSortOrder().addListener((javafx.collections.ListChangeListener<javafx.scene.control.TableColumn<?, ?>>) change -> saveSort(table, base, prefs));
+    table.getSortOrder().addListener((ListChangeListener<TableColumn<?, ?>>) change -> saveSort(table, base, prefs));
   }
 
-  public static void attachToggleMenu(javafx.scene.control.TableView<?> table, String key) {
-    javafx.scene.control.ContextMenu menu = new javafx.scene.control.ContextMenu();
-    for (javafx.scene.control.TableColumn<?, ?> col : table.getColumns()) {
-      javafx.scene.control.CheckMenuItem item = new javafx.scene.control.CheckMenuItem(col.getText());
+  public static void attachToggleMenu(TableView<?> table, String key) {
+    ContextMenu menu = new ContextMenu();
+    for (TableColumn<?, ?> col : table.getColumns()) {
+      CheckMenuItem item = new CheckMenuItem(col.getText());
       item.setSelected(col.isVisible());
       item.selectedProperty().addListener((obs, o, n) -> col.setVisible(n));
       menu.getItems().add(item);
     }
     // Add a global reset option that clears persisted prefs for this table and reapplies defaults
-    javafx.scene.control.MenuItem resetItem = new javafx.scene.control.MenuItem("Reset Columns (Clear Saved Preferences)");
+    MenuItem resetItem = new MenuItem("Reset Columns (Clear Saved Preferences)");
     resetItem.setOnAction(e -> {
       // Clear persisted widths/visibility/sort for this table key
       String base = "table." + key + ".";
-      java.util.prefs.Preferences p = java.util.prefs.Preferences.userNodeForPackage(TablePreferencesUtil.class);
+      Preferences p = Preferences.userNodeForPackage(TablePreferencesUtil.class);
       try {
         String[] keys = p.keys();
         for (String k : keys) {
@@ -225,28 +233,28 @@ public class TablePreferencesUtil {
       } catch (Exception ignored) {
       }
       // Reset UI to defaults: make all visible and clear sort; widths revert to current prefWidth
-      for (javafx.scene.control.TableColumn<?, ?> col : table.getColumns()) {
+      for (TableColumn<?, ?> col : table.getColumns()) {
         col.setVisible(true);
       }
       table.getSortOrder().clear();
       table.sort();
     });
-    menu.getItems().add(new javafx.scene.control.SeparatorMenuItem());
+    menu.getItems().add(new SeparatorMenuItem());
     menu.getItems().add(resetItem);
     table.setContextMenu(menu);
   }
 
-  private static javafx.scene.control.TableColumn<?, ?> findColumnById(javafx.scene.control.TableView<?> table, String id) {
-    for (javafx.scene.control.TableColumn<?, ?> c : table.getColumns()) {
+  private static TableColumn<?, ?> findColumnById(TableView<?> table, String id) {
+    for (TableColumn<?, ?> c : table.getColumns()) {
       if (id.equals(c.getId())) return c;
     }
     return null;
   }
 
-  private static void saveSort(javafx.scene.control.TableView<?> table, String base, java.util.prefs.Preferences prefs) {
-    java.util.List<String> ids = new java.util.ArrayList<>();
-    java.util.List<String> types = new java.util.ArrayList<>();
-    for (javafx.scene.control.TableColumn<?, ?> c : table.getSortOrder()) {
+  private static void saveSort(TableView<?> table, String base, Preferences prefs) {
+    List<String> ids = new ArrayList<>();
+    List<String> types = new ArrayList<>();
+    for (TableColumn<?, ?> c : table.getSortOrder()) {
       ids.add(ensureId(c));
       types.add(c.getSortType().name());
     }
@@ -254,7 +262,7 @@ public class TablePreferencesUtil {
     prefs.put(base + "sort.types", String.join(",", types));
   }
 
-  private static String ensureId(javafx.scene.control.TableColumn<?, ?> col) {
+  private static String ensureId(TableColumn<?, ?> col) {
     if (col.getId() == null || col.getId().isBlank()) {
       String id = col.getText() == null ? "col" : col.getText().toLowerCase().replaceAll("[^a-z0-9]+", "_");
       col.setId(id);

@@ -1,6 +1,9 @@
 package com.scheduleengine.tournament;
 
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
 import com.scheduleengine.common.TableColumnUtil;
+import com.scheduleengine.common.TableIconColumns;
 import com.scheduleengine.common.TablePreferencesUtil;
 import com.scheduleengine.league.domain.League;
 import com.scheduleengine.league.service.LeagueService;
@@ -173,7 +176,15 @@ public class TournamentView {
       }
     });
 
-    table.getColumns().addAll(idCol, nameCol, typeCol, statusCol, startCol, endCol, leagueCol, actionCol);
+    TableColumn<Tournament, Void> iconCol = TableIconColumns.iconColumn(
+      "Icon",
+      Tournament::getIconName,
+      Tournament::getIconBackgroundColor,
+      Tournament::getIconGlyphColor,
+      32, 64
+    );
+
+    table.getColumns().addAll(idCol, iconCol, nameCol, typeCol, statusCol, startCol, endCol, leagueCol, actionCol);
 
     // Persist table state (widths, visibility, sort)
     com.scheduleengine.common.TablePreferencesUtil.bind(table, "tournament");
@@ -298,6 +309,12 @@ public class TournamentView {
     if (existing != null) statusCombo.setValue(existing.getStatus());
     else statusCombo.setValue(Tournament.TournamentStatus.DRAFT);
 
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(existing != null ? existing.getIconName() : null,
+      existing != null ? existing.getIconBackgroundColor() : null,
+      existing != null ? existing.getIconGlyphColor() : null,
+      null);
+
     int row = 0;
     grid.add(new Label("Name:"), 0, row);
     grid.add(nameField, 1, row++);
@@ -321,6 +338,8 @@ public class TournamentView {
     grid.add(locationField, 1, row++);
     grid.add(new Label("Status:"), 0, row);
     grid.add(statusCombo, 1, row++);
+    grid.add(iconLabel, 0, row);
+    grid.add(iconPicker, 1, row++);
 
     return grid;
   }
@@ -341,6 +360,7 @@ public class TournamentView {
     TextField locationField = (TextField) grid.getChildren().filtered(n -> GridPane.getRowIndex(n) == 9 && GridPane.getColumnIndex(n) == 1).get(0);
     @SuppressWarnings("unchecked")
     ComboBox<Tournament.TournamentStatus> statusCombo = (ComboBox<Tournament.TournamentStatus>) grid.getChildren().filtered(n -> GridPane.getRowIndex(n) == 10 && GridPane.getColumnIndex(n) == 1).get(0);
+    IconPicker iconPicker = (IconPicker) grid.getChildren().filtered(n -> GridPane.getRowIndex(n) == 11 && GridPane.getColumnIndex(n) == 1).get(0);
 
     if (nameField.getText().isBlank() || typeCombo.getValue() == null ||
       startPicker.getValue() == null || endPicker.getValue() == null) {
@@ -364,6 +384,11 @@ public class TournamentView {
     }
     t.setLocation(locationField.getText());
     t.setStatus(statusCombo.getValue());
+
+    IconPicker.Selection sel = iconPicker.currentSelection();
+    t.setIconName(sel.iconName);
+    t.setIconBackgroundColor(sel.bgColor);
+    t.setIconGlyphColor(sel.glyphColor);
 
     return t;
   }

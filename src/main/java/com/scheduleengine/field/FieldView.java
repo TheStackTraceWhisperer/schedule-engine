@@ -1,5 +1,9 @@
 package com.scheduleengine.field;
 
+import com.scheduleengine.common.ActionsColumnUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
+import com.scheduleengine.common.TableIconColumns;
 import com.scheduleengine.common.TablePreferencesUtil;
 import com.scheduleengine.field.domain.Field;
 import com.scheduleengine.field.service.FieldAvailabilityService;
@@ -74,6 +78,14 @@ public class FieldView {
     table.setItems(data);
     table.getSelectionModel().setSelectionMode(javafx.scene.control.SelectionMode.SINGLE);
 
+    TableColumn<Field, Void> iconCol = TableIconColumns.iconColumn(
+      "Icon",
+      Field::getIconName,
+      Field::getIconBackgroundColor,
+      Field::getIconGlyphColor,
+      32, 64
+    );
+
     TableColumn<Field, String> nameCol = new TableColumn<>("Name");
     nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
     nameCol.setPrefWidth(150);
@@ -86,24 +98,11 @@ public class FieldView {
     addressCol.setCellValueFactory(new PropertyValueFactory<>("address"));
     addressCol.setPrefWidth(200);
 
-    TableColumn<Field, Void> actionCol = new TableColumn<>("Actions");
-    actionCol.setPrefWidth(150);
-    actionCol.setCellFactory(col -> new javafx.scene.control.TableCell<>() {
-      private final Button editBtn = new Button("View Details");
+    TableColumn<Field, Void> actionCol = ActionsColumnUtil.viewDetailsColumn("Actions", this::viewFieldDetails, 150);
 
-      {
-        editBtn.setStyle("-fx-padding: 4 12; -fx-font-size: 11px; -fx-background-color: #667eea; -fx-text-fill: white;");
-        editBtn.setOnAction(e -> viewFieldDetails(getTableView().getItems().get(getIndex())));
-      }
-
-      @Override
-      protected void updateItem(Void item, boolean empty) {
-        super.updateItem(item, empty);
-        setGraphic(empty ? null : new HBox(6, editBtn));
-      }
-    });
-
-    table.getColumns().addAll(nameCol, locationCol, addressCol, actionCol);
+    table.getColumns().addAll(iconCol, nameCol, locationCol, addressCol, actionCol);
+    TablePreferencesUtil.bind(table, "field");
+    TablePreferencesUtil.attachToggleMenu(table, "field");
     TablePreferencesUtil.setupTableColumnPersistence(table, "field.table");
 
     vbox.getChildren().addAll(topBox, table);
@@ -147,12 +146,17 @@ public class FieldView {
     javafx.scene.control.TextField addressField = new javafx.scene.control.TextField();
     addressField.setPromptText("Address");
 
+    javafx.scene.control.Label iconLabel = new javafx.scene.control.Label("Icon:");
+    IconPicker iconPicker = new IconPicker(null, null, null, null);
+
     grid.add(new javafx.scene.control.Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new javafx.scene.control.Label("Location:"), 0, 1);
     grid.add(locationField, 1, 1);
     grid.add(new javafx.scene.control.Label("Address:"), 0, 2);
     grid.add(addressField, 1, 2);
+    grid.add(iconLabel, 0, 3);
+    grid.add(iconPicker, 1, 3);
 
     dialog.getDialogPane().setContent(grid);
     dialog.setResultConverter(dialogButton -> {
@@ -161,6 +165,10 @@ public class FieldView {
         field.setName(nameField.getText());
         field.setLocation(locationField.getText());
         field.setAddress(addressField.getText());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        field.setIconName(sel.iconName);
+        field.setIconBackgroundColor(sel.bgColor);
+        field.setIconGlyphColor(sel.glyphColor);
         return field;
       }
       return null;

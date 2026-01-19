@@ -1,6 +1,8 @@
 package com.scheduleengine.season;
 
 import com.scheduleengine.common.DialogUtil;
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
 import com.scheduleengine.common.ScheduleGeneratorResultView;
 import com.scheduleengine.common.service.ScheduleGeneratorService;
 import com.scheduleengine.game.service.GameService;
@@ -55,6 +57,12 @@ public class SeasonDetailView {
     Label nameLabel = new Label(season.getName());
     nameLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
 
+    HBox headerTop = new HBox(10);
+    StackPane iconBadge = IconBadge.build(season.getIconName(), season.getIconBackgroundColor(), season.getIconGlyphColor(), 36);
+    headerTop.getChildren().addAll(iconBadge, nameLabel);
+    header.getChildren().clear();
+    header.getChildren().add(headerTop);
+
     VBox infoBox = new VBox(5);
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy");
@@ -70,7 +78,7 @@ public class SeasonDetailView {
       infoBox.getChildren().add(leagueLabel);
     }
 
-    header.getChildren().addAll(nameLabel, infoBox);
+    header.getChildren().add(infoBox);
 
     // Section title
     Label sectionTitle = new Label("What would you like to do?");
@@ -233,6 +241,9 @@ public class SeasonDetailView {
     });
     leagueCombo.setValue(season.getLeague());
 
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(season.getIconName(), season.getIconBackgroundColor(), season.getIconGlyphColor(), null);
+
     grid.add(new Label("Name:"), 0, 0);
     grid.add(nameField, 1, 0);
     grid.add(new Label("Start Date:"), 0, 1);
@@ -241,6 +252,8 @@ public class SeasonDetailView {
     grid.add(endPicker, 1, 2);
     grid.add(new Label("League:"), 0, 3);
     grid.add(leagueCombo, 1, 3);
+    grid.add(iconLabel, 0, 4);
+    grid.add(iconPicker, 1, 4);
 
     dialog.getDialogPane().setContent(grid);
 
@@ -257,6 +270,10 @@ public class SeasonDetailView {
         season.setStartDate(startPicker.getValue());
         season.setEndDate(endPicker.getValue());
         season.setLeague(leagueCombo.getValue());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        season.setIconName(sel.iconName);
+        season.setIconBackgroundColor(sel.bgColor);
+        season.setIconGlyphColor(sel.glyphColor);
         return season;
       }
       return null;

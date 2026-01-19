@@ -69,19 +69,72 @@ public class GameDetailView {
   }
 
   private void showEditDialog(Game game) {
-    // reuse GameView's edit form via a small dialog for now
     Dialog<Game> dialog = new Dialog<>();
     dialog.setTitle("Edit Game");
     ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
     dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-    GameView temp = new GameView(gameService, null, null, null, null);
-    GridPane form = temp.buildGameForm(game);
-    dialog.getDialogPane().setContent(form);
-    dialog.setResultConverter(btn -> btn == saveButtonType ? temp.buildGameFromForm(form, game) : null);
+
+    GridPane grid = new GridPane();
+    grid.setHgap(10);
+    grid.setVgap(10);
+    grid.setPadding(new Insets(20, 150, 10, 10));
+
+    // Date/Time
+    DatePicker datePicker = new DatePicker(game.getGameDate() != null ? game.getGameDate().toLocalDate() : null);
+    Spinner<Integer> hourSpinner = new Spinner<>(0, 23, game.getGameDate() != null ? game.getGameDate().getHour() : 18);
+    Spinner<Integer> minuteSpinner = new Spinner<>(0, 59, game.getGameDate() != null ? game.getGameDate().getMinute() : 0, 5);
+
+    // Status
+    ComboBox<Game.GameStatus> statusCombo = new ComboBox<>(javafx.collections.FXCollections.observableArrayList(Game.GameStatus.values()));
+    statusCombo.setValue(game.getStatus() != null ? game.getStatus() : Game.GameStatus.SCHEDULED);
+
+    // Scores
+    TextField homeScoreField = new TextField(game.getHomeScore() != null ? String.valueOf(game.getHomeScore()) : "0");
+    TextField awayScoreField = new TextField(game.getAwayScore() != null ? String.valueOf(game.getAwayScore()) : "0");
+
+    int r = 0;
+    grid.add(new Label("Date:"), 0, r);
+    HBox dateBox = new HBox(6, datePicker, new Label("@"), hourSpinner, new Label(":"), minuteSpinner);
+    grid.add(dateBox, 1, r++);
+
+    grid.add(new Label("Status:"), 0, r);
+    grid.add(statusCombo, 1, r++);
+
+    grid.add(new Label("Home Score:"), 0, r);
+    grid.add(homeScoreField, 1, r++);
+
+    grid.add(new Label("Away Score:"), 0, r);
+    grid.add(awayScoreField, 1, r++);
+
+    dialog.getDialogPane().setContent(grid);
+
+    dialog.setResultConverter(btn -> {
+      if (btn == saveButtonType) {
+        try {
+          Integer homeScore = Integer.parseInt(homeScoreField.getText());
+          Integer awayScore = Integer.parseInt(awayScoreField.getText());
+          java.time.LocalDate date = datePicker.getValue();
+          Integer hour = hourSpinner.getValue();
+          Integer minute = minuteSpinner.getValue();
+          java.time.LocalDateTime dt = date != null ? java.time.LocalDateTime.of(date, java.time.LocalTime.of(hour, minute)) : game.getGameDate();
+
+          game.setGameDate(dt);
+          game.setStatus(statusCombo.getValue());
+          game.setHomeScore(homeScore);
+          game.setAwayScore(awayScore);
+          return game;
+        } catch (Exception ex) {
+          return null;
+        }
+      }
+      return null;
+    });
+
     dialog.showAndWait().ifPresent(updated -> {
       gameService.update(game.getId(), updated);
-      // Navigate to updated detail
-      NavigationContext ctx = new NavigationContext().navigateTo("games", "Games").navigateTo("game-detail", "Game #" + updated.getId(), updated);
+      NavigationContext ctx = new NavigationContext()
+        .navigateTo("games", "Games")
+        .navigateTo("game-detail", "Game #" + updated.getId(), updated);
       navigationHandler.navigate(ctx);
     });
   }
@@ -100,4 +153,3 @@ public class GameDetailView {
     });
   }
 }
-

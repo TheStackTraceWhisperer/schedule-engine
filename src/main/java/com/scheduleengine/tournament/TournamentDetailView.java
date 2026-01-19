@@ -1,5 +1,7 @@
 package com.scheduleengine.tournament;
 
+import com.scheduleengine.common.IconBadge;
+import com.scheduleengine.common.IconPicker;
 import com.scheduleengine.navigation.NavigationContext;
 import com.scheduleengine.navigation.NavigationHandler;
 import com.scheduleengine.tournament.domain.Tournament;
@@ -8,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class TournamentDetailView {
@@ -23,8 +26,12 @@ public class TournamentDetailView {
     VBox root = new VBox(12);
     root.setPadding(new Insets(16));
 
+    StackPane badge = IconBadge.build(t.getIconName(), t.getIconBackgroundColor(), t.getIconGlyphColor(), 28);
+
     Label title = new Label("Tournament: " + t.getName());
     title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+    HBox titleRow = new HBox(8, badge, title);
 
     GridPane details = new GridPane();
     details.setHgap(10);
@@ -65,7 +72,7 @@ public class TournamentDetailView {
 
     actions.getChildren().addAll(editBtn, deleteBtn, backBtn);
 
-    root.getChildren().addAll(title, new Separator(), details, new Separator(), actions);
+    root.getChildren().setAll(titleRow, new Separator(), details, new Separator(), actions);
     return root;
   }
 
@@ -89,6 +96,8 @@ public class TournamentDetailView {
     DatePicker endPicker = new DatePicker(existing.getEndDate());
     TextField entryFeeField = new TextField(existing.getEntryFee() != null ? existing.getEntryFee().toString() : "0.00");
     TextField locationField = new TextField(existing.getLocation() != null ? existing.getLocation() : "");
+    Label iconLabel = new Label("Icon:");
+    IconPicker iconPicker = new IconPicker(existing.getIconName(), existing.getIconBackgroundColor(), existing.getIconGlyphColor(), null);
 
     int row = 0;
     grid.add(new Label("Name:"), 0, row);
@@ -105,6 +114,8 @@ public class TournamentDetailView {
     grid.add(entryFeeField, 1, row++);
     grid.add(new Label("Location:"), 0, row);
     grid.add(locationField, 1, row++);
+    grid.add(iconLabel, 0, row);
+    grid.add(iconPicker, 1, row++);
 
     dialog.getDialogPane().setContent(grid);
     dialog.setResultConverter(btn -> {
@@ -120,6 +131,10 @@ public class TournamentDetailView {
           existing.setEntryFee(0.0);
         }
         existing.setLocation(locationField.getText());
+        IconPicker.Selection sel = iconPicker.currentSelection();
+        existing.setIconName(sel.iconName);
+        existing.setIconBackgroundColor(sel.bgColor);
+        existing.setIconGlyphColor(sel.glyphColor);
         return existing;
       }
       return null;
